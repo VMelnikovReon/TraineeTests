@@ -4,9 +4,14 @@
  */
 
 import { AxiosError, AxiosResponse } from "axios";
-import { ITokenResponse } from "./types/AmoApiResponses/ITokenResponse";
-import { IDeal } from "./types/AmoApiResponses/IDeal";
-import { IContact } from "./types/AmoApiResponses/IContact";
+import { ITokenResponse } from "./types/AmoApi/AmoApiRes/Account/ITokenResponse";
+import { IDeal } from "./types/AmoApi/AmoApiRes/Deals/IDeal";
+import { IContact } from "./types/AmoApi/AmoApiRes/Contact/IContact";
+import { IErrorResponse } from "./types/AmoApi/AmoApiRes/Errors/IErrorResponse";
+import { IDealsResponse } from "./types/AmoApi/AmoApiRes/Deals/IDealsResponse";
+import { IUpdateDeal } from "./types/AmoApi/AmoApiReq/Update/IUpdateDeal";
+import { IFilters } from "./types/AmoApi/IFilters";
+import { IUpdateContact } from "./types/AmoApi/AmoApiReq/Update/IUpdateContact";
 
 const axios = require("axios");
 const querystring = require("querystring");
@@ -31,15 +36,15 @@ class Api {
 			if (!this.access_token) {
 				return this.getAccessToken().then(() => this.authChecker(request)(...args));
 			}
-			return request(...args).catch((err: AxiosError) => {
+			return request(...args).catch((err: AxiosError<IErrorResponse>) => {
 				logger.error(err.response);
 				logger.error(err);
 				logger.error(err.response?.data);
 				const data = err.response?.data;
-				// if ("validation-errors" in data) { TODO
-				// 	data["validation-errors"].forEach(({ errors }) => logger.error(errors));
-				// 	logger.error("args", JSON.stringify(args, null, 2));
-				// }
+				if (data && "validation-errors" in data) { 
+					data["validation-errors"].forEach((error) => logger.error(error));
+					logger.error("args", JSON.stringify(args, null, 2));
+				}
 				if (err.response?.status == 401 && err.response.statusText === "Unauthorized") {
 					logger.debug("Нужно обновить токен");
 					return this.refreshToken().then(() => this.authChecker(request)(...args));
@@ -114,7 +119,7 @@ class Api {
 
 	// this.getAccessToken = getAccessToken;
 	// Получить сделку по id
-	public getDeal = this.authChecker((id, withParam = []) => {
+	public getDeal = this.authChecker((id:string, withParam = []) => {
 		return axios
 			.get(
 				`${this.ROOT_PATH}/api/v4/leads/${id}?${querystring.encode({
@@ -130,12 +135,12 @@ class Api {
 	});
 
 	// Получить сделки по фильтрам
-	public getDeals = this.authChecker(({ page = 1, limit = LIMIT, filters }) => {
+	public getDeals = this.authChecker((payload : { page:number, limit: number, filters:IFilters } ) => {
 		const url = `${this.ROOT_PATH}/api/v4/leads?${querystring.stringify({
-			page,
-			limit,
+			page: payload.page,
+			limit :payload.limit,
 			with: ["contacts"],
-			...filters,
+			...payload.filters,
 		})}`;
 
 		return axios
@@ -144,15 +149,14 @@ class Api {
 					Authorization: `Bearer ${this.access_token}`,
 				},
 			})
-			.then((res:AxiosResponse<IDeal[]>) => {
-				// return res.data ? res.data._embedded.leads : []; TODO
-				return res.data ? res.data : [];
+			.then((res:AxiosResponse<IDealsResponse>) => {
+				return res.data ? res.data._embedded.leads : []; 
 			});
 	});
 
 	// Обновить сделки
-	public updateDeals = this.authChecker((data) => {
-		return axios.patch(`${this.ROOT_PATH}/api/v4/leads`, [].concat(data), {
+	public updateDeals = this.authChecker((data:IUpdateDeal[]) => {
+		return axios.patch(`${this.ROOT_PATH}/api/v4/leads`, data, {
 			headers: {
 				Authorization: `Bearer ${this.access_token}`,
 			},
@@ -160,7 +164,7 @@ class Api {
 	});
 
 	// Получить контакт по id
-	public getContact = this.authChecker((id) => {
+	public getContact = this.authChecker((id:number) => {
 		return axios
 			.get(`${this.ROOT_PATH}/api/v4/contacts/${id}?${querystring.stringify({
 				with: ["leads"]
@@ -173,8 +177,8 @@ class Api {
 	});
 
 	// Обновить контакты
-	public updateContacts = this.authChecker((data) => {
-		return axios.patch(`${this.ROOT_PATH}/api/v4/contacts`, [].concat(data), {
+	public updateContacts = this.authChecker((data:IUpdateContact) => {
+		return axios.patch(`${this.ROOT_PATH}/api/v4/contacts`, data, {
 			headers: {
 				Authorization: `Bearer ${this.access_token}`,
 			},

@@ -5,7 +5,7 @@
  */
 
 import { AxiosResponse } from "axios";
-import { ICustomField } from "./types/AmoApiResponses/ICustomField";
+import { ICustomField } from "./types/AmoApi/ICustomField";
 
 const fs = require("fs");
 const logger = require("./logger");

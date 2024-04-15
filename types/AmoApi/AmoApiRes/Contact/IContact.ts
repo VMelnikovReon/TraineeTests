@@ -1,4 +1,4 @@
-import { ICustomField } from "./ICustomField";
+import { ICustomField } from "../../ICustomField";
 
 export interface IContact{
 	id:number;

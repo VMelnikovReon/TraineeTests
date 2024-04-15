@@ -1,4 +1,4 @@
-import { IContact } from "../types/AmoApiResponses/IContact";
+import { IContact } from "../types/AmoApi/AmoApiRes/Contact/IContact";
 import { IHookService } from "../types/Services/IHookService";
 
 const hooksService : IHookService = {
