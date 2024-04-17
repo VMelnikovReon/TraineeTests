@@ -1,8 +1,8 @@
-import { ICompany } from "../Company/ICompany";
-import { ICustomField } from "../../ICustomField";
-import { ITag } from "../../ITag";
+import { Company } from "../Company/Company";
+import { CustomField } from "../../CustomField";
+import { Tag } from "../../Tag";
 
-export interface IDeal {
+export type Deal = {
 	id: number;
 	name: string;
 	price: number;
@@ -19,7 +19,7 @@ export interface IDeal {
 	closed_at: number;
 	closest_task_at: number;
 	is_deleted: boolean;
-	custom_fields_values: ICustomField[];
+	custom_fields_values: CustomField[];
 	score: number;
 	account_id: number;
 	is_price_modified_by_robot: boolean;

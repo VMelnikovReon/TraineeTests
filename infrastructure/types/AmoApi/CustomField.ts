@@ -1,4 +1,4 @@
-export interface ICustomField {
+export type CustomField = {
 	id: string;
 	name: string;
 	values: number[];

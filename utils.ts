@@ -4,7 +4,7 @@
  *  - общего назначения;
  */
 
-import { ICustomField } from "./infrastructure/types/AmoApi/ICustomField";
+import { CustomField } from "./infrastructure/types/AmoApi/CustomField";
 
 const fs = require("fs");
 const logger = require("./logger");
@@ -17,7 +17,7 @@ const logger = require("./logger");
  * @returns значение поля
  */
 const getFieldValue = (
-	customFields: ICustomField[],
+	customFields: CustomField[],
 	fieldId: number
 ): number | undefined => {
 	const field = customFields
@@ -36,7 +36,7 @@ const getFieldValue = (
  * @returns массив значений поля
  */
 const getFieldValues = (
-	customFields: ICustomField[],
+	customFields: CustomField[],
 	fieldId: number
 ): number[] => {
 	const field = customFields

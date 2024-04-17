@@ -1,9 +1,9 @@
-import { CUSTOM_FIELD_NAMES, MSEC_PER_SEC } from "../infrastructure/consts";
-import { IContact } from "../infrastructure/types/AmoApi/AmoApiRes/Contact/IContact";
-import { IHookService } from "../infrastructure/types/Services/IHookService";
+import { CUSTOM_FIELD_NAMES, MSEC_PER_SEC } from "../../infrastructure/consts";
+import { Contact } from "../../infrastructure/types/AmoApi/AmoApiRes/Contact/Contact";
+import { IHookService } from "./HookService";
 
 const hooksService: IHookService = {
-	calculateAge: (contact: IContact) => {
+	calculateAge: (contact: Contact) => {
 		const BirthdayDateCustomField = contact.custom_fields.find(
 			(e) => e.name === CUSTOM_FIELD_NAMES.BIRTHDAY_DATE
 		);

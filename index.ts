@@ -1,5 +1,5 @@
 import { Request, Response, Express } from "express";
-import { ICreateContactBody } from "./infrastructure/types/AmoApi/WebHooks/ICreateContaktReq";
+import { CreateContactBody } from "./infrastructure/types/AmoApi/WebHooks/CreateContaktReq";
 
 /**
  * Основной модуль приложения - точка входа.
@@ -8,7 +8,7 @@ const express = require("express");
 const api = require("./api");
 const logger = require("./logger");
 const config = require("./config");
-const hooksService = require("./services/hooksService");
+const hooksService = require("./services/hookService/hooksService");
 
 const app: Express = express();
 
@@ -22,8 +22,10 @@ api.getAccessToken().then(() => {
 
 	app.post(
 		"/hook",
-		(req: Request<{}, {}, ICreateContactBody>, res: Response) => {
+		(req: Request<{}, {}, CreateContactBody>, res: Response) => {
 			const age = hooksService.calculateAge(req.body.contacts.add[0]);
+			console.log('awsdawsd');
+			logger.debug(`возраст добавленного контакта ${age}`);
 			res.send("OK");
 		}
 	);

@@ -4,19 +4,19 @@
  */
 
 import { AxiosError, AxiosResponse } from "axios";
-import { ITokenResponse } from "./infrastructure/types/AmoApi/AmoApiRes/Account/ITokenResponse";
-import { IDeal } from "./infrastructure/types/AmoApi/AmoApiRes/Deals/IDeal";
-import { IContact } from "./infrastructure/types/AmoApi/AmoApiRes/Contact/IContact";
-import { IErrorResponse } from "./infrastructure/types/AmoApi/AmoApiRes/Errors/IErrorResponse";
-import { IDealsResponse } from "./infrastructure/types/AmoApi/AmoApiRes/Deals/IDealsResponse";
-import { IUpdateDeal } from "./infrastructure/types/AmoApi/AmoApiReq/Update/IUpdateDeal";
-import { IFilters } from "./infrastructure/types/AmoApi/IFilters";
-import { IUpdateContact } from "./infrastructure/types/AmoApi/AmoApiReq/Update/IUpdateContact";
+import { TokenResponse } from "./infrastructure/types/AmoApi/AmoApiRes/Account/TokenResponse";
+import { Deal } from "./infrastructure/types/AmoApi/AmoApiRes/Deals/Deal";
+import { Contact } from "./infrastructure/types/AmoApi/AmoApiRes/Contact/Contact";
+import { ErrorResponse } from "./infrastructure/types/AmoApi/AmoApiRes/Errors/ErrorResponse";
+import { DealsResponse } from "./infrastructure/types/AmoApi/AmoApiRes/Deals/DealsResponse";
+import { UpdateDeal } from "./infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
+import { Filters } from "./infrastructure/types/AmoApi/Filters";
+import { UpdateContact } from "./infrastructure/types/AmoApi/AmoApiReq/Update/UpdateContact";
 import { Response } from "express";
-import { IUpdateContactRes } from "./infrastructure/types/AmoApi/AmoApiRes/Contact/IUpdateContactRes";
-import { IUpdateDealsRes } from "./infrastructure/types/AmoApi/AmoApiRes/Deals/IUpdateDealsRes";
+import { UpdateContactRes } from "./infrastructure/types/AmoApi/AmoApiRes/Contact/UpdateContactRes";
+import { UpdateDealsRes } from "./infrastructure/types/AmoApi/AmoApiRes/Deals/UpdateDealsRes";
+import axios from 'axios';
 
-const axios = require("axios");
 const querystring = require("querystring");
 const fs = require("fs");
 const axiosRetry = require("axios-retry");
@@ -34,16 +34,16 @@ class Api {
 	private refresh_token: string | null = null;
 	private readonly ROOT_PATH = `https://${config.SUB_DOMAIN}.amocrm.ru`;
 
-	private authChecker<Args, Response>(
-		request: (args: Args) => Promise<Response>
-	): (args: Args) => Promise<Response> {
-		return (args: Args) => {
+	private authChecker<TArgs extends unknown[], TResponse>(
+		request: (...args: TArgs) => Promise<TResponse>
+	): (...args: TArgs) => Promise<TResponse> {
+		return (...args: TArgs) => {
 			if (!this.access_token) {
 				return this.getAccessToken().then(() =>
-					this.authChecker(request)(args)
+					this.authChecker(request)(...args)
 				);
 			}
-			return request(args).catch((err: AxiosError<IErrorResponse>) => {
+			return request(...args).catch((err: AxiosError<ErrorResponse>) => {
 				logger.error(err.response);
 				logger.error(err);
 				logger.error(err.response?.data);
@@ -58,7 +58,7 @@ class Api {
 				) {
 					logger.debug("Нужно обновить токен");
 					return this.refreshToken().then(() =>
-						this.authChecker(request)(args)
+						this.authChecker(request)(...args)
 					);
 				}
 				throw err;
@@ -66,16 +66,16 @@ class Api {
 		};
 	}
 
-	private requestAccessToken(): Promise<ITokenResponse | AxiosError> {
+	private requestAccessToken(): Promise<TokenResponse | AxiosError> {
 		return axios
-			.post(`${this.ROOT_PATH}/oauth2/access_token`, {
+			.post<TokenResponse>(`${this.ROOT_PATH}/oauth2/access_token`, {
 				client_id: config.CLIENT_ID,
 				client_secret: config.CLIENT_SECRET,
 				grant_type: "authorization_code",
 				code: config.AUTH_CODE,
 				redirect_uri: config.REDIRECT_URI,
 			})
-			.then((res: AxiosResponse<ITokenResponse>) => {
+			.then((res) => {
 				logger.debug("Свежий токен получен");
 				return res.data;
 			})
@@ -86,14 +86,14 @@ class Api {
 	}
 
 	private getAccessToken = async (): Promise<
-		string | ITokenResponse | AxiosError
+		string | TokenResponse | AxiosError
 	> => {
 		if (this.access_token) {
 			return Promise.resolve(this.access_token);
 		}
 		try {
 			const content = fs.readFileSync(AMO_TOKEN_PATH);
-			const token: ITokenResponse = JSON.parse(content);
+			const token: TokenResponse = JSON.parse(content);
 			this.access_token = token.access_token;
 			this.refresh_token = token.refresh_token;
 			return Promise.resolve(token);
@@ -111,16 +111,16 @@ class Api {
 		}
 	};
 
-	private refreshToken(): Promise<ITokenResponse> {
+	private refreshToken(): Promise<TokenResponse | void> {
 		return axios
-			.post(`${this.ROOT_PATH}/oauth2/access_token`, {
+			.post<TokenResponse>(`${this.ROOT_PATH}/oauth2/access_token`, {
 				client_id: config.CLIENT_ID,
 				client_secret: config.CLIENT_SECRET,
 				grant_type: "refresh_token",
 				refresh_token: this.refresh_token,
 				redirect_uri: config.REDIRECT_URI,
 			})
-			.then((res: AxiosResponse<ITokenResponse>) => {
+			.then((res) => {
 				logger.debug("Токен успешно обновлен");
 				const token = res.data;
 				fs.writeFileSync(AMO_TOKEN_PATH, JSON.stringify(token));
@@ -136,16 +136,9 @@ class Api {
 
 	// this.getAccessToken = getAccessToken;
 	// Получить сделку по id
-	public getDeal = this.authChecker(
-		({
-			id,
-			withParam = [],
-		}: {
-			id: string;
-			withParam: string[];
-		}): Promise<IDeal> => {
+	public getDeal = this.authChecker((id: number, withParam:string[] = []): Promise<Deal> => {
 			return axios
-				.get(
+				.get<Deal>(
 					`${this.ROOT_PATH}/api/v4/leads/${id}?${querystring.encode({
 						with: withParam.join(","),
 					})}`,
@@ -155,21 +148,17 @@ class Api {
 						},
 					}
 				)
-				.then((res: AxiosResponse<IDeal>) => res.data);
+				.then((res) => res.data);
 		}
 	);
 
 	// Получить сделки по фильтрам
 	public getDeals = this.authChecker(
-		({
-			page,
-			limit,
-			filters,
-		}: {
-			page: number;
-			limit: number;
-			filters: IFilters;
-		}): Promise<IDealsResponse> => {
+		(
+			page : number,
+			limit : number,
+			filters : Filters,
+		): Promise<Deal[]> => {
 			const url = `${this.ROOT_PATH}/api/v4/leads?${querystring.stringify({
 				page: page,
 				limit: limit,
@@ -178,12 +167,12 @@ class Api {
 			})}`;
 
 			return axios
-				.get(url, {
+				.get<DealsResponse>(url, {
 					headers: {
 						Authorization: `Bearer ${this.access_token}`,
 					},
 				})
-				.then((res: AxiosResponse<IDealsResponse>) => {
+				.then((res) => {
 					return res.data ? res.data._embedded.leads : [];
 				});
 		}
@@ -191,7 +180,7 @@ class Api {
 
 	// Обновить сделки
 	public updateDeals = this.authChecker(
-		(data: IUpdateDeal[]): Promise<IUpdateDealsRes> => {
+		(...data: UpdateDeal[]): Promise<UpdateDealsRes> => {
 			return axios.patch(`${this.ROOT_PATH}/api/v4/leads`, data, {
 				headers: {
 					Authorization: `Bearer ${this.access_token}`,
@@ -201,9 +190,9 @@ class Api {
 	);
 
 	// Получить контакт по id
-	public getContact = this.authChecker((id: number): Promise<IContact> => {
+	public getContact = this.authChecker((id: number): Promise<Contact> => {
 		return axios
-			.get(
+			.get<Contact>(
 				`${this.ROOT_PATH}/api/v4/contacts/${id}?${querystring.stringify({
 					with: ["leads"],
 				})}`,
@@ -213,12 +202,12 @@ class Api {
 					},
 				}
 			)
-			.then((res: AxiosResponse<IContact>) => res.data);
+			.then((res) => res.data);
 	});
 
 	// Обновить контакты
 	public updateContacts = this.authChecker(
-		(data: IUpdateContact): Promise<IUpdateContactRes> => {
+		(...data: UpdateContact[]): Promise<UpdateContactRes> => {
 			return axios.patch(`${this.ROOT_PATH}/api/v4/contacts`, data, {
 				headers: {
 					Authorization: `Bearer ${this.access_token}`,

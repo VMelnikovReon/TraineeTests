@@ -1,6 +1,6 @@
-import { ICustomField } from "../../ICustomField";
+import { CustomField } from "../../CustomField";
 
-export interface IContact {
+export type Contact = {
 	id: number;
 	responsible_user_id: number;
 	date_create: string;
@@ -8,7 +8,7 @@ export interface IContact {
 	created_user_id: number;
 	modified_user_id: number;
 	account_id: number;
-	custom_fields: ICustomField[];
+	custom_fields: CustomField[];
 	created_at: string;
 	updated_at: string;
 	type: string;
