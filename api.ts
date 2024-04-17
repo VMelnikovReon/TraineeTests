@@ -4,14 +4,14 @@
  */
 
 import { AxiosError, AxiosResponse } from "axios";
-import { ITokenResponse } from "./types/AmoApi/AmoApiRes/Account/ITokenResponse";
-import { IDeal } from "./types/AmoApi/AmoApiRes/Deals/IDeal";
-import { IContact } from "./types/AmoApi/AmoApiRes/Contact/IContact";
-import { IErrorResponse } from "./types/AmoApi/AmoApiRes/Errors/IErrorResponse";
-import { IDealsResponse } from "./types/AmoApi/AmoApiRes/Deals/IDealsResponse";
-import { IUpdateDeal } from "./types/AmoApi/AmoApiReq/Update/IUpdateDeal";
-import { IFilters } from "./types/AmoApi/IFilters";
-import { IUpdateContact } from "./types/AmoApi/AmoApiReq/Update/IUpdateContact";
+import { ITokenResponse } from "./infrastructure/types/AmoApi/AmoApiRes/Account/ITokenResponse";
+import { IDeal } from "./infrastructure/types/AmoApi/AmoApiRes/Deals/IDeal";
+import { IContact } from "./infrastructure/types/AmoApi/AmoApiRes/Contact/IContact";
+import { IErrorResponse } from "./infrastructure/types/AmoApi/AmoApiRes/Errors/IErrorResponse";
+import { IDealsResponse } from "./infrastructure/types/AmoApi/AmoApiRes/Deals/IDealsResponse";
+import { IUpdateDeal } from "./infrastructure/types/AmoApi/AmoApiReq/Update/IUpdateDeal";
+import { IFilters } from "./infrastructure/types/AmoApi/IFilters";
+import { IUpdateContact } from "./infrastructure/types/AmoApi/AmoApiReq/Update/IUpdateContact";
 
 const axios = require("axios");
 const querystring = require("querystring");
@@ -45,7 +45,7 @@ class Api {
 					data["validation-errors"].forEach((error) => logger.error(error));
 					logger.error("args", JSON.stringify(args, null, 2));
 				}
-				if (err.response?.status == 401 && err.response.statusText === "Unauthorized") {
+				if (err.response?.status === 401 && err.response.statusText === "Unauthorized") {
 					logger.debug("Нужно обновить токен");
 					return this.refreshToken().then(() => this.authChecker(request)(...args));
 				}
@@ -54,7 +54,7 @@ class Api {
 		};
 	};
 
-	private requestAccessToken(){
+	private requestAccessToken() : Promise<ITokenResponse | AxiosError>{
 		return axios
 			.post(`${this.ROOT_PATH}/oauth2/access_token`, {
 				client_id: config.CLIENT_ID,
@@ -73,13 +73,13 @@ class Api {
 			});
 	};
 
-	private getAccessToken = async () => {
+	private getAccessToken = async () : Promise<string | ITokenResponse | AxiosError> => {
 		if (this.access_token) {
 			return Promise.resolve(this.access_token);
 		}
 		try {
 			const content = fs.readFileSync(AMO_TOKEN_PATH);
-			const token = JSON.parse(content);
+			const token : ITokenResponse = JSON.parse(content);
 			this.access_token = token.access_token;
 			this.refresh_token = token.refresh_token;
 			return Promise.resolve(token);
@@ -87,6 +87,9 @@ class Api {
 			logger.error(`Ошибка при чтении файла ${AMO_TOKEN_PATH}`, error);
 			logger.debug("Попытка заново получить токен");
 			const token = await this.requestAccessToken();
+			if (token instanceof Error){
+				throw token.message;
+			}
 			fs.writeFileSync(AMO_TOKEN_PATH, JSON.stringify(token));
 			this.access_token = token.access_token;
 			this.refresh_token = token.refresh_token;
@@ -94,7 +97,7 @@ class Api {
 		}
 	};
 
-	private refreshToken(){
+	private refreshToken() : Promise<ITokenResponse>{
 		return axios
 			.post(`${this.ROOT_PATH}/oauth2/access_token`, {
 				client_id: config.CLIENT_ID,
@@ -119,7 +122,7 @@ class Api {
 
 	// this.getAccessToken = getAccessToken;
 	// Получить сделку по id
-	public getDeal = this.authChecker((id:string, withParam = []) => {
+	public getDeal = this.authChecker((id:string, withParam = []) : Promise<IDeal> => {
 		return axios
 			.get(
 				`${this.ROOT_PATH}/api/v4/leads/${id}?${querystring.encode({
@@ -135,12 +138,12 @@ class Api {
 	});
 
 	// Получить сделки по фильтрам
-	public getDeals = this.authChecker((payload : { page:number, limit: number, filters:IFilters } ) => {
+	public getDeals = this.authChecker(({page,limit,filters} : { page:number, limit: number, filters:IFilters } ) => {
 		const url = `${this.ROOT_PATH}/api/v4/leads?${querystring.stringify({
-			page: payload.page,
-			limit :payload.limit,
+			page: page,
+			limit :limit,
 			with: ["contacts"],
-			...payload.filters,
+			...filters,
 		})}`;
 
 		return axios

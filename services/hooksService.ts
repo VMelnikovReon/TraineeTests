@@ -1,17 +1,17 @@
-import { IContact } from "../types/AmoApi/AmoApiRes/Contact/IContact";
-import { IHookService } from "../types/Services/IHookService";
+import { CUSTOM_FIELD_NAMES } from "../infrastructure/apiConsts";
+import { IContact } from "../infrastructure/types/AmoApi/AmoApiRes/Contact/IContact";
+import { IHookService } from "../infrastructure/types/Services/IHookService";
 
 const hooksService : IHookService = {
 	calculateAge: (contact:IContact) =>{
-		console.log(contact);
-		const dateField = contact.custom_fields.find(e=>e.name === "Дата рождения");
-		if (!dateField){
+		const BirthdayDateCustomField = contact.custom_fields.find(e=>e.name === CUSTOM_FIELD_NAMES.BIRTHDAY_DATE);
+		if (!BirthdayDateCustomField){
 			console.log("Поле с датой не найдено");
 			return;
 		}
 
 		const currentDate = new Date();
-		const birthdayDate = new Date(dateField.values[0] * 1000);
+		const birthdayDate = new Date(BirthdayDateCustomField.values[0] * 1000);
 		
 		let age = currentDate.getFullYear() - birthdayDate.getFullYear();
 		

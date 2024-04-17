@@ -1,4 +1,5 @@
 import { Request, Response, Express } from "express";
+import { ICreateContactBody } from './infrastructure/types/AmoApi/WebHooks/ICreateContaktReq';
 
 /**
  * Основной модуль приложения - точка входа. 
@@ -17,9 +18,8 @@ app.use(express.urlencoded({ extended: true }));
 api.getAccessToken().then(() => {
 	app.get("/ping", (req : Request, res : Response) => res.send("pong " + Date.now()));
 
-	app.post("/hook", (req : Request, res : Response) => {
+	app.post("/hook", (req : Request<{},{},ICreateContactBody>, res : Response) => {
 		const age = hooksService.calculateAge(req.body.contacts.add[0]);
-		console.log(age);
 		res.send("OK");
 	});
 
