@@ -1,4 +1,4 @@
-import { CUSTOM_FIELD_NAMES } from "../infrastructure/apiConsts";
+import { CUSTOM_FIELD_NAMES, MSEC_PER_SEC } from "../infrastructure/consts";
 import { IContact } from "../infrastructure/types/AmoApi/AmoApiRes/Contact/IContact";
 import { IHookService } from "../infrastructure/types/Services/IHookService";
 
@@ -8,14 +8,14 @@ const hooksService: IHookService = {
 			(e) => e.name === CUSTOM_FIELD_NAMES.BIRTHDAY_DATE
 		);
 		if (!BirthdayDateCustomField) {
-			console.log("Поле с датой не найдено");
+			logger.debug("Поле с датой не найдено");
 			return;
 		}
 
 		const currentDate = new Date();
-		const birthdayDate = new Date(BirthdayDateCustomField.values[0] * 1000);
+		const birthdayDate = new Date(BirthdayDateCustomField.values[0] * MSEC_PER_SEC);
 
-		let age = currentDate.getFullYear() - birthdayDate.getFullYear();
+		const age = currentDate.getFullYear() - birthdayDate.getFullYear();
 
 		const currentMonth = currentDate.getMonth();
 		const birthMonth = birthdayDate.getMonth();
@@ -26,7 +26,7 @@ const hooksService: IHookService = {
 			currentMonth < birthMonth ||
 			(currentMonth === birthMonth && currentDay < birthDay)
 		) {
-			age--;
+			return age - 1;
 		}
 
 		return age;

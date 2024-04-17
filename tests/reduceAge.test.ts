@@ -1,13 +1,15 @@
+import { CUSTOM_FIELD_NAMES, MSEC_PER_SEC } from "../infrastructure/consts";
+
 const hooksService = require("../services/hooksService");
 
 describe("reduceAge", () => {
   it('should return correct age when birthday has passed this year', () => {
     const inputDate = new Date('1990-01-01');
-    const timestamp = inputDate.getTime() / 1000;
+    const timestamp = inputDate.getTime() / MSEC_PER_SEC;
 
     const contact = {
       custom_fields: [
-        { name: "Дата рождения", values: [timestamp] }
+        { name: CUSTOM_FIELD_NAMES.BIRTHDAY_DATE, values: [timestamp] }
       ]
     };
     const expectedAge = new Date().getFullYear() - 1990;
@@ -17,11 +19,11 @@ describe("reduceAge", () => {
 
   it('should return correct age when birthday has not passed this year', () => {
     const inputDate = new Date("1990-12-31");
-    const timestamp = inputDate.getTime() / 1000;
+    const timestamp = inputDate.getTime() / MSEC_PER_SEC;
 
     const contact = {
       custom_fields: [
-        { name: "Дата рождения", values: [timestamp] }
+        { name: CUSTOM_FIELD_NAMES.BIRTHDAY_DATE, values: [timestamp] }
       ]
     };
     const expectedAge = new Date().getFullYear() - 1990 - 1;
