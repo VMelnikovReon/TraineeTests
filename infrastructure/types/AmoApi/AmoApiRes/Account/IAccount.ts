@@ -1,5 +1,5 @@
-export interface IAccount{
-	subdomain : string;
-	id:number;
-	_links:{self:string;};
+export interface IAccount {
+	subdomain: string;
+	id: number;
+	_links: { self: string };
 }

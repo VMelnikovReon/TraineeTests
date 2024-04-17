@@ -1,5 +1,5 @@
-export interface ICustomField{
-	id:string;
-	name:string;
-	values:number[];
+export interface ICustomField {
+	id: string;
+	name: string;
+	values: number[];
 }

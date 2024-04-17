@@ -1,3 +1,1 @@
-export interface IUpdateDealsRes{
-	
-}
+export interface IUpdateDealsRes {}

@@ -1,3 +1,3 @@
-export interface IErrorResponse{
-		[key:string] : string[]
+export interface IErrorResponse {
+	[key: string]: string[];
 }

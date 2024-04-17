@@ -1,7 +1,7 @@
-import { IContact } from "../AmoApiRes/Contact/IContact"
+import { IContact } from "../AmoApiRes/Contact/IContact";
 
-export interface ICreateContactBody{
+export interface ICreateContactBody {
 	contacts: {
-		add:IContact[];
-	}
+		add: IContact[];
+	};
 }

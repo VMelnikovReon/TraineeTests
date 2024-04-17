@@ -4,7 +4,6 @@
  *  - общего назначения;
  */
 
-import { AxiosResponse } from "axios";
 import { ICustomField } from "./infrastructure/types/AmoApi/ICustomField";
 
 const fs = require("fs");
@@ -17,7 +16,10 @@ const logger = require("./logger");
  * @param {*} fieldId - id поля из которого нужно получить значение;
  * @returns значение поля
  */
-const getFieldValue = (customFields : ICustomField[], fieldId:number) => {
+const getFieldValue = (
+	customFields: ICustomField[],
+	fieldId: number
+): number | undefined => {
 	const field = customFields
 		? customFields.find((item) => String(item.id) === String(fieldId))
 		: undefined;
@@ -33,7 +35,10 @@ const getFieldValue = (customFields : ICustomField[], fieldId:number) => {
  * @param {*} fieldId - id поля из которого нужно получить значения;
  * @returns массив значений поля
  */
-const getFieldValues = (customFields:ICustomField[], fieldId:number) => {
+const getFieldValues = (
+	customFields: ICustomField[],
+	fieldId: number
+): number[] => {
 	const field = customFields
 		? customFields.find((item) => String(item.id) === String(fieldId))
 		: undefined;
@@ -48,7 +53,13 @@ const getFieldValues = (customFields:ICustomField[], fieldId:number) => {
  * @param {*} enum_id - В случае, если поле списковое или мультисписковое, то для указания нужного значения указывается данный параметр, т.е. id - варианта списка;
  * @returns типовой объект с данными о поле, который необходимо передать в amoCRM.
  */
-const makeField = (field_id:number, value:number, enum_id:number) => {
+const makeField = (
+	field_id: number,
+	value: number,
+	enum_id: number
+):
+	| { field_id: number; values: { value: string | number; enum_id: number }[] }
+	| undefined => {
 	if (value === undefined || value === null) {
 		return undefined;
 	}
@@ -57,7 +68,7 @@ const makeField = (field_id:number, value:number, enum_id:number) => {
 		values: [
 			{
 				value,
-				enum_id
+				enum_id,
 			},
 		],
 	};
@@ -65,19 +76,19 @@ const makeField = (field_id:number, value:number, enum_id:number) => {
 
 /**
  * Функция для разбиения запроса на создание на несколько по chunkSize
- * @param {*} reqest - функция-запрос в amo
+ * @param {*} request - функция-запрос в amo
  * @param {*} data - данные запроса (до разбиения на chunkSize)
  * @param {*} chunkSize - размер chunkSize
  * @param {*} operationName - название операции
  */
 
 //TODO
-const bulkOperation = async <T>( 
-	reqest : (...args:any[])=>Promise<T>,
-	data : any[],
-	chunkSize:number,
+const bulkOperation = async <T>(
+	request: (...args: any[]) => Promise<T>,
+	data: any[],
+	chunkSize: number,
 	operationName = "bulk"
-) : Promise<void> => {
+): Promise<void> => {
 	let failed = [];
 	if (data.length) {
 		logger.debug(`Старт операции ${operationName}`);
@@ -86,7 +97,7 @@ const bulkOperation = async <T>(
 			for (let i = 0; i < chunksCount; i++) {
 				try {
 					const sliced = data.slice(i * chunkSize, (i + 1) * chunkSize);
-					await reqest(sliced);
+					await request(sliced);
 				} catch (e) {
 					logger.error(e);
 					failed.push(...data.slice(i * chunkSize, (i + 1) * chunkSize));
@@ -112,23 +123,23 @@ const bulkOperation = async <T>(
  * @param {*} limit - лимит на количество элементов в ответе (по дефолту - 200)
  * @returns [ ...elements ] все элементы сущности аккаунта
  */
-const getAllPages = async (
-    request: (options: { page: number, limit: number }) => Promise<any[]>,
-    page = 1,
-    limit = 200
-): Promise<any[]> => {
-    try {
-        console.log(`Загрузка страницы ${page}`);
-        const res = await request({ page, limit });
-        if (res.length === limit) {
-            const next = await getAllPages(request, page + 1, limit);
-            return [...res, ...next];
-        }
-        return res;
-    } catch (e) {
-        logger.error(e);
-        return [];
-    }
+const getAllPages = async <ResType>(
+	request: (options: { page: number; limit: number }) => Promise<any[]>,
+	page = 1,
+	limit = 200
+): Promise<ResType[]> => {
+	try {
+		console.log(`Загрузка страницы ${page}`);
+		const res = await request({ page, limit });
+		if (res.length === limit) {
+			const next = await getAllPages(request, page + 1, limit);
+			return [...res, ...next];
+		}
+		return res;
+	} catch (e) {
+		logger.error(e);
+		return [];
+	}
 };
 
 /**
@@ -137,8 +148,13 @@ const getAllPages = async (
  * @param {*} tel - String
  * @returns String | undefined
  */
-const getClearPhoneNumber = (tel:string) : string | undefined => {
-	return tel ? tel.split("").filter(item => new RegExp(/\d/).test(item)).join("") : undefined;
+const getClearPhoneNumber = (tel: string): string | undefined => {
+	return tel
+		? tel
+				.split("")
+				.filter((item) => new RegExp(/\d/).test(item))
+				.join("")
+		: undefined;
 };
 
 module.exports = {
@@ -147,5 +163,5 @@ module.exports = {
 	makeField,
 	bulkOperation,
 	getAllPages,
-	getClearPhoneNumber
+	getClearPhoneNumber,
 };

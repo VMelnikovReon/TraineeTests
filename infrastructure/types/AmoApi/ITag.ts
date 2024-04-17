@@ -1,3 +1,1 @@
-export interface ITag{
-	
-}
+export interface ITag {}

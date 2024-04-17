@@ -1,4 +1,4 @@
-export interface ICustomFieldToUpdate{
-	id?:string;
-	name?:string;
+export interface ICustomFieldToUpdate {
+	id?: string;
+	name?: string;
 }

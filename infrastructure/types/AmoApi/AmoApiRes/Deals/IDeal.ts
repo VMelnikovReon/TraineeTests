@@ -1,8 +1,8 @@
 import { ICompany } from "../Company/ICompany";
-import { ICustomField } from "../../ICustomField"
+import { ICustomField } from "../../ICustomField";
 import { ITag } from "../../ITag";
 
-export interface IDeal{
+export interface IDeal {
 	id: number;
 	name: string;
 	price: number;
@@ -24,32 +24,31 @@ export interface IDeal{
 	account_id: number;
 	is_price_modified_by_robot: boolean;
 	_links: {
-		self : {href:string};
-	},
+		self: { href: string };
+	};
 	_embedded: {
 		tags: {
-			id:number;
-			name:string;
-			color:string;
+			id: number;
+			name: string;
+			color: string;
 		}[];
 		companies: {
-			id:number;
-			_links:{self:{href:string}};
+			id: number;
+			_links: { self: { href: string } };
 		}[];
 		loss_reason: {
-			id:number;
-			name:string;
-			sort:number;
-			create_at:number;
-			update_at:number;
-			_links:{self:{href:string}};
-		}[]
-		;
+			id: number;
+			name: string;
+			sort: number;
+			create_at: number;
+			update_at: number;
+			_links: { self: { href: string } };
+		}[];
 		catalog_elements: [];
-		contacts:{
-			id:number;
-			is_main:boolean;
-			_links:{self:{href:string}};
-		}[]
-	}
+		contacts: {
+			id: number;
+			is_main: boolean;
+			_links: { self: { href: string } };
+		}[];
+	};
 }

@@ -1,3 +1,1 @@
-export interface IUpdateContactRes{
-	
-}
+export interface IUpdateContactRes {}

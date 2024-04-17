@@ -1,3 +1,3 @@
 export const CUSTOM_FIELD_NAMES = {
-	BIRTHDAY_DATE : 'День рождения'
-}
+	BIRTHDAY_DATE: "День рождения",
+};
