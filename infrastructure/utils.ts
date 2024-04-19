@@ -4,10 +4,10 @@
  *  - общего назначения;
  */
 
-import { CustomField } from "./infrastructure/types/AmoApi/CustomField";
+import { CustomField, CustomValue } from "./types/AmoApi/CustomField";
 
 const fs = require("fs");
-const logger = require("./logger");
+const logger = require("../infrastructure/logger");
 
 /**
  * Функция извлекает значение из id поля, массива полей custom_fields сущности amoCRM
@@ -19,9 +19,11 @@ const logger = require("./logger");
 const getFieldValue = (
 	customFields: CustomField[],
 	fieldId: number
-): number | undefined => {
+): CustomValue | undefined => {
 	const field = customFields
-		? customFields.find((item) => String(item.id) === String(fieldId))
+		? customFields.find(
+				(item) => String(item.field_id || item.id) === String(fieldId)
+		  )
 		: undefined;
 	const value = field ? field.values[0] : undefined;
 	return value;
@@ -38,9 +40,11 @@ const getFieldValue = (
 const getFieldValues = (
 	customFields: CustomField[],
 	fieldId: number
-): number[] => {
+): CustomValue[] => {
 	const field = customFields
-		? customFields.find((item) => String(item.id) === String(fieldId))
+		? customFields.find(
+				(item) => String(item.field_id || item.id) === String(fieldId)
+		  )
 		: undefined;
 	const values = field ? field.values : [];
 	return values;
@@ -82,10 +86,9 @@ const makeField = (
  * @param {*} operationName - название операции
  */
 
-//TODO
-const bulkOperation = async <T>(
-	request: (...args: any[]) => Promise<T>,
-	data: any[],
+const bulkOperation = async <ArgsT extends unknown[], ResT>(
+	request: (...args: ArgsT) => Promise<ResT>,
+	data: ArgsT,
 	chunkSize: number,
 	operationName = "bulk"
 ): Promise<void> => {
@@ -97,7 +100,7 @@ const bulkOperation = async <T>(
 			for (let i = 0; i < chunksCount; i++) {
 				try {
 					const sliced = data.slice(i * chunkSize, (i + 1) * chunkSize);
-					await request(sliced);
+					await request(...(sliced as ArgsT));
 				} catch (e) {
 					logger.error(e);
 					failed.push(...data.slice(i * chunkSize, (i + 1) * chunkSize));

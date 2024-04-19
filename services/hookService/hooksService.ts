@@ -1,36 +1,32 @@
-import { CUSTOM_FIELD_NAMES, MSEC_PER_SEC } from "../../infrastructure/consts";
+import { CUSTOM_FIELDS_ID, MSEC_PER_SEC } from "../../infrastructure/consts";
+import { ServiceError } from "../../infrastructure/errors/ServiceError";
+import { calculateAge } from "../../infrastructure/helpers/calculateAge";
 import { Contact } from "../../infrastructure/types/AmoApi/AmoApiRes/Contact/Contact";
-import { IHookService } from "./HookService";
+import { HookServiceInterface } from "./HookServiceInterface";
 
-const hooksService: IHookService = {
-	calculateAge: (contact: Contact) => {
+class hooksService implements HookServiceInterface {
+	public addContact(contact: Contact) {
 		const BirthdayDateCustomField = contact.custom_fields.find(
-			(e) => e.name === CUSTOM_FIELD_NAMES.BIRTHDAY_DATE
+			(field) =>
+				Number(field.field_id || field.id) === CUSTOM_FIELDS_ID.BIRTHDAY_DATE
 		);
+
 		if (!BirthdayDateCustomField) {
-			logger.debug("Поле с датой не найдено");
-			return;
+			throw ServiceError.BadRequest("отсутствует поле с датой");
 		}
 
-		const currentDate = new Date();
-		const birthdayDate = new Date(BirthdayDateCustomField.values[0] * MSEC_PER_SEC);
-
-		const age = currentDate.getFullYear() - birthdayDate.getFullYear();
-
-		const currentMonth = currentDate.getMonth();
-		const birthMonth = birthdayDate.getMonth();
-		const currentDay = currentDate.getDate();
-		const birthDay = birthdayDate.getDate();
-
-		if (
-			currentMonth < birthMonth ||
-			(currentMonth === birthMonth && currentDay < birthDay)
-		) {
-			return age - 1;
+		if (typeof Number(BirthdayDateCustomField.values[0]) !== "number") {
+			throw ServiceError.BadRequest("поле с датой имеет не правильный тип");
 		}
+
+		const birthdayDate = new Date(
+			Number(BirthdayDateCustomField.values[0]) * MSEC_PER_SEC
+		);
+
+		const age = calculateAge(birthdayDate);
 
 		return age;
-	},
-};
+	}
+}
 
-module.exports = hooksService;
+module.exports = new hooksService();

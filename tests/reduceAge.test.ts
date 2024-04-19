@@ -1,4 +1,4 @@
-import { CUSTOM_FIELD_NAMES, MSEC_PER_SEC } from "../infrastructure/consts";
+import { CUSTOM_FIELDS_ID, MSEC_PER_SEC } from "../infrastructure/consts";
 
 const hooksService = require("../services/hooksService");
 
@@ -9,7 +9,7 @@ describe("reduceAge", () => {
 
     const contact = {
       custom_fields: [
-        { name: CUSTOM_FIELD_NAMES.BIRTHDAY_DATE, values: [timestamp] }
+        { name: CUSTOM_FIELDS_ID.BIRTHDAY_DATE, values: [timestamp] }
       ]
     };
     const expectedAge = new Date().getFullYear() - 1990;
@@ -23,7 +23,7 @@ describe("reduceAge", () => {
 
     const contact = {
       custom_fields: [
-        { name: CUSTOM_FIELD_NAMES.BIRTHDAY_DATE, values: [timestamp] }
+        { name: CUSTOM_FIELDS_ID.BIRTHDAY_DATE, values: [timestamp] }
       ]
     };
     const expectedAge = new Date().getFullYear() - 1990 - 1;

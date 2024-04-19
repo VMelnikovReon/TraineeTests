@@ -3,25 +3,25 @@
  * Модуль используется для работы в NodeJS.
  */
 
-import { AxiosError, AxiosResponse } from "axios";
-import { TokenResponse } from "./infrastructure/types/AmoApi/AmoApiRes/Account/TokenResponse";
-import { Deal } from "./infrastructure/types/AmoApi/AmoApiRes/Deals/Deal";
-import { Contact } from "./infrastructure/types/AmoApi/AmoApiRes/Contact/Contact";
-import { ErrorResponse } from "./infrastructure/types/AmoApi/AmoApiRes/Errors/ErrorResponse";
-import { DealsResponse } from "./infrastructure/types/AmoApi/AmoApiRes/Deals/DealsResponse";
-import { UpdateDeal } from "./infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
-import { Filters } from "./infrastructure/types/AmoApi/Filters";
-import { UpdateContact } from "./infrastructure/types/AmoApi/AmoApiReq/Update/UpdateContact";
-import { Response } from "express";
-import { UpdateContactRes } from "./infrastructure/types/AmoApi/AmoApiRes/Contact/UpdateContactRes";
-import { UpdateDealsRes } from "./infrastructure/types/AmoApi/AmoApiRes/Deals/UpdateDealsRes";
-import axios from 'axios';
+import { AxiosError, AxiosRequestConfig, HttpStatusCode } from "axios";
+import { TokenResponse } from "../infrastructure/types/AmoApi/AmoApiRes/Account/TokenResponse";
+import { Deal } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/Deal";
+import { Contact } from "../infrastructure/types/AmoApi/AmoApiRes/Contact/Contact";
+import { ErrorResponse } from "../infrastructure/types/AmoApi/AmoApiRes/Errors/ErrorResponse";
+import { DealsResponse } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/DealsResponse";
+import { UpdateDeal } from "../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
+import { Filters } from "../infrastructure/types/AmoApi/Filters";
+import { UpdateContact } from "../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateContact";
+import { UpdateContactRes } from "../infrastructure/types/AmoApi/AmoApiRes/Contact/UpdateContactRes";
+import { UpdateDealsRes } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/UpdateDealsRes";
+import axios from "axios";
+import { ERRORS } from "../infrastructure/consts";
 
 const querystring = require("querystring");
 const fs = require("fs");
 const axiosRetry = require("axios-retry");
-const config = require("./config");
-const logger = require("./logger");
+const config = require("../config");
+const logger = require("../infrastructure/logger");
 
 axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 
@@ -29,10 +29,19 @@ const AMO_TOKEN_PATH = "amo_token.json";
 
 const LIMIT = 200;
 
-class Api {
+export class Api {
 	private access_token: string | null = null;
 	private refresh_token: string | null = null;
 	private readonly ROOT_PATH = `https://${config.SUB_DOMAIN}.amocrm.ru`;
+
+	private createReqConfig(options: { Auth: boolean }): AxiosRequestConfig {
+		const config: AxiosRequestConfig = {
+			headers: {
+				Authorization: `Bearer ${this.access_token}`,
+			},
+		};
+		return config;
+	}
 
 	private authChecker<TArgs extends unknown[], TResponse>(
 		request: (...args: TArgs) => Promise<TResponse>
@@ -48,12 +57,14 @@ class Api {
 				logger.error(err);
 				logger.error(err.response?.data);
 				const data = err.response?.data;
-				if (data && "validation-errors" in data) {
-					data["validation-errors"].forEach((error) => logger.error(error));
+				if (data && ERRORS.VALIDATION_ERRORS in data) {
+					data[ERRORS.VALIDATION_ERRORS].forEach((error) =>
+						logger.error(error)
+					);
 					logger.error("args", JSON.stringify(args, null, 2));
 				}
 				if (
-					err.response?.status === 401 &&
+					err.response?.status === HttpStatusCode.Unauthorized &&
 					err.response.statusText === "Unauthorized"
 				) {
 					logger.debug("Нужно обновить токен");
@@ -136,17 +147,14 @@ class Api {
 
 	// this.getAccessToken = getAccessToken;
 	// Получить сделку по id
-	public getDeal = this.authChecker((id: number, withParam:string[] = []): Promise<Deal> => {
+	public getDeal = this.authChecker(
+		(id: number, withParam: string[] = []): Promise<Deal> => {
 			return axios
 				.get<Deal>(
 					`${this.ROOT_PATH}/api/v4/leads/${id}?${querystring.encode({
 						with: withParam.join(","),
 					})}`,
-					{
-						headers: {
-							Authorization: `Bearer ${this.access_token}`,
-						},
-					}
+					this.createReqConfig({ Auth: true })
 				)
 				.then((res) => res.data);
 		}
@@ -154,11 +162,7 @@ class Api {
 
 	// Получить сделки по фильтрам
 	public getDeals = this.authChecker(
-		(
-			page : number,
-			limit : number,
-			filters : Filters,
-		): Promise<Deal[]> => {
+		(page: number, limit: number, filters: Filters): Promise<Deal[]> => {
 			const url = `${this.ROOT_PATH}/api/v4/leads?${querystring.stringify({
 				page: page,
 				limit: limit,
@@ -181,11 +185,11 @@ class Api {
 	// Обновить сделки
 	public updateDeals = this.authChecker(
 		(...data: UpdateDeal[]): Promise<UpdateDealsRes> => {
-			return axios.patch(`${this.ROOT_PATH}/api/v4/leads`, data, {
-				headers: {
-					Authorization: `Bearer ${this.access_token}`,
-				},
-			});
+			return axios.patch(
+				`${this.ROOT_PATH}/api/v4/leads`,
+				data,
+				this.createReqConfig({ Auth: true })
+			);
 		}
 	);
 
@@ -196,11 +200,7 @@ class Api {
 				`${this.ROOT_PATH}/api/v4/contacts/${id}?${querystring.stringify({
 					with: ["leads"],
 				})}`,
-				{
-					headers: {
-						Authorization: `Bearer ${this.access_token}`,
-					},
-				}
+				this.createReqConfig({ Auth: true })
 			)
 			.then((res) => res.data);
 	});
@@ -208,11 +208,11 @@ class Api {
 	// Обновить контакты
 	public updateContacts = this.authChecker(
 		(...data: UpdateContact[]): Promise<UpdateContactRes> => {
-			return axios.patch(`${this.ROOT_PATH}/api/v4/contacts`, data, {
-				headers: {
-					Authorization: `Bearer ${this.access_token}`,
-				},
-			});
+			return axios.patch(
+				`${this.ROOT_PATH}/api/v4/contacts`,
+				data,
+				this.createReqConfig({ Auth: true })
+			);
 		}
 	);
 }
