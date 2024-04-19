@@ -19,3 +19,4 @@ amo_token.json
 # Любые другие файлы проекта
 .idea/
 .vscode/
+.editonconfig
