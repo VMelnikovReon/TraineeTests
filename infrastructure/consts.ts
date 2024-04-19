@@ -1,5 +1,6 @@
 export const CUSTOM_FIELDS_ID = {
 	BIRTHDAY_DATE: 785303,
+	AGE: 930767,
 };
 
 export const ROUTES = {

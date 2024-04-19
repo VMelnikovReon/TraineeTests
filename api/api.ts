@@ -207,7 +207,8 @@ export class Api {
 
 	// Обновить контакты
 	public updateContacts = this.authChecker(
-		(...data: UpdateContact[]): Promise<UpdateContactRes> => {
+		(data: UpdateContact[]): Promise<UpdateContactRes> => {
+			console.log(data);
 			return axios.patch(
 				`${this.ROOT_PATH}/api/v4/contacts`,
 				data,

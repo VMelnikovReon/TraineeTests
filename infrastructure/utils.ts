@@ -57,13 +57,12 @@ const getFieldValues = (
  * @param {*} enum_id - В случае, если поле списковое или мультисписковое, то для указания нужного значения указывается данный параметр, т.е. id - варианта списка;
  * @returns типовой объект с данными о поле, который необходимо передать в amoCRM.
  */
-const makeField = (
+export const makeField = (
 	field_id: number,
 	value: number,
 	enum_id: number
 ):
-	| { field_id: number; values: { value: string | number; enum_id: number }[] }
-	| undefined => {
+	CustomField | undefined => {
 	if (value === undefined || value === null) {
 		return undefined;
 	}
