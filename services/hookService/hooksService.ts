@@ -9,7 +9,7 @@ import { Contact } from "../../infrastructure/types/AmoApi/AmoApiRes/Contact/Con
 import { HookServiceInterface } from "./HookServiceInterface";
 import { UpdateContact } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateContact";
 import { makeField } from "../../infrastructure/utils";
-import { UpdateDeakReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateDealReq";
+import { UpdateDealReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateDealReq";
 import { Link } from "../../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
 import { UpdateDeal } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
 
@@ -25,7 +25,7 @@ class hooksService implements HookServiceInterface {
 				return contactLinks[0];
 			default:
 				return contactLinks.find(
-					(contact) => contact.metadata?.main_contact === true
+					(contact) => contact.metadata?.main_contact
 				);
 		}
 	}
@@ -79,16 +79,18 @@ class hooksService implements HookServiceInterface {
 			},
 		];
 
+		await this.api.UpdateContact(updateContactBody);
+
 		this.logger.debug('возраст добавлен');
 	}
 
-	public async updateDeal(deals: UpdateDeakReq): Promise<void> {
+	public async updateDeal(deals: UpdateDealReq): Promise<void> {
 		deals.leads.update.forEach(async (lead) => {
-			const linkEntityes: Link[] = await this.api.getLinkEntityes(
+			const linkEntities: Link[] = await this.api.getLinkEntityes(
 				AMO_ENTITYES.LEADS,
 				lead.id
 			);
-			const contacts = linkEntityes.filter(
+			const contacts = linkEntities.filter(
 				(link) => link.to_entity_type === AMO_ENTITYES.CONTACTS
 			);
 

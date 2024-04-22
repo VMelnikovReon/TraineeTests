@@ -1,7 +1,7 @@
 import { Account } from "../AmoApiRes/Account/Account"
 import { UpdateDealDTO } from "./UpdateDealDTO";
 
-export type UpdateDeakReq = {
+export type UpdateDealReq = {
 	account:Account;
 	leads:{
 		update:UpdateDealDTO[];
