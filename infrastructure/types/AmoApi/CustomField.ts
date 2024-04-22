@@ -1,4 +1,4 @@
-export type CustomValue = | { value: number | boolean | string, enum_id?:number }
+export type CustomValue = { value: number | boolean | string, enum_id?:number, enum?:number }
 | string
 | number
 | boolean;

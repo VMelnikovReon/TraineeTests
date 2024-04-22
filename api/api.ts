@@ -16,6 +16,7 @@ import { UpdateContactRes } from "../infrastructure/types/AmoApi/AmoApiRes/Conta
 import { UpdateDealsRes } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/UpdateDealsRes";
 import axios from "axios";
 import { ERRORS } from "../infrastructure/consts";
+import { EntityLinksDTO, Link } from "../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
 
 const querystring = require("querystring");
 const fs = require("fs");
@@ -184,7 +185,7 @@ export class Api {
 
 	// Обновить сделки
 	public updateDeals = this.authChecker(
-		(...data: UpdateDeal[]): Promise<UpdateDealsRes> => {
+		(data: UpdateDeal[]): Promise<UpdateDealsRes> => {
 			return axios.patch(
 				`${this.ROOT_PATH}/api/v4/leads`,
 				data,
@@ -214,6 +215,27 @@ export class Api {
 				data,
 				this.createReqConfig({ Auth: true })
 			);
+		}
+	);
+
+	public getLinkEntityes = this.authChecker(
+		(
+			targetEntity: "leads" | "contacts" | "companies" | "customers",
+			id: number,
+			filters: Filters
+		): Promise<Link[]> => {
+			return axios
+				.get<EntityLinksDTO>(
+					`${this.ROOT_PATH}/api/v4/${targetEntity}/${id}/links`,
+					{
+						headers: {
+							Authorization: `Bearer ${this.access_token}`,
+						},
+					}
+				)
+				.then((res) => {
+					return res ? res.data._embedded.links : [];
+				});
 		}
 	);
 }
