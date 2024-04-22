@@ -3,8 +3,8 @@ import { Contact } from "../../infrastructure/types/AmoApi/AmoApiRes/Contact/Con
 import { UpdateDeakReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateDealReq";
 
 export interface HookServiceInterface {
-	 addContact:  (contact: Contact) => Promise<boolean>;
-	 updateDeal: (deals: UpdateDeakReq) => Promise<boolean>;
+	 addContact:  (contact: Contact) => Promise<void>;
+	 updateDeal: (deals: UpdateDeakReq) => Promise<void>;
 	 
 
 	}

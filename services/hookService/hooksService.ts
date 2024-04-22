@@ -9,20 +9,29 @@ import { Contact } from "../../infrastructure/types/AmoApi/AmoApiRes/Contact/Con
 import { HookServiceInterface } from "./HookServiceInterface";
 import { UpdateContact } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateContact";
 import { makeField } from "../../infrastructure/utils";
-import { UpdateContactRes } from "../../infrastructure/types/AmoApi/AmoApiRes/Contact/UpdateContactRes";
-import { HttpStatusCode } from "axios";
 import { UpdateDeakReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateDealReq";
 import { Link } from "../../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
-import { checkValueByEnumId } from "../../infrastructure/helpers/checkValueByEnumId";
 import { UpdateDeal } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
 
 class hooksService implements HookServiceInterface {
 	private api = require("../../api/api");
+	private logger = require('../../infrastructure/logger');
 
-	public async addContact(contact: Contact): Promise<boolean> {
+	private getLeadContacts = (contactLinks: Link[]) : Link | null | undefined =>{
+		switch (contactLinks.length) {
+			case 0:
+				return null;
+			case 1:
+				return contactLinks[0];
+			default:
+				return contactLinks.find(
+					(contact) => contact.metadata?.main_contact === true
+				);
+		}
+	}
+
+	public async addContact(contact: Contact): Promise<void> {
 		const customFields = contact.custom_fields || contact.custom_fields_values;
-
-		console.log(customFields);
 
 		if (!customFields) {
 			throw new Error("кастомные поля не найдены");
@@ -70,12 +79,10 @@ class hooksService implements HookServiceInterface {
 			},
 		];
 
-		const updateContactRes = await this.api.updateContacts(updateContactBody);
-
-		return true;
+		this.logger.debug('возраст добавлен');
 	}
 
-	public async updateDeal(deals: UpdateDeakReq): Promise<boolean> {
+	public async updateDeal(deals: UpdateDeakReq): Promise<void> {
 		deals.leads.update.forEach(async (lead) => {
 			const linkEntityes: Link[] = await this.api.getLinkEntityes(
 				AMO_ENTITYES.LEADS,
@@ -85,19 +92,10 @@ class hooksService implements HookServiceInterface {
 				(link) => link.to_entity_type === AMO_ENTITYES.CONTACTS
 			);
 
-			let mainContact = null;
+			const mainContact = this.getLeadContacts(contacts);
 
-			switch (contacts.length) {
-				case 0:
-					return;
-				case 1:
-					mainContact = contacts[0];
-					break;
-				default:
-					mainContact = contacts.find(
-						(contact) => contact.metadata?.main_contact === true
-					);
-					break;
+			if (!mainContact){
+				return;
 			}
 
 			const contactFullInfo: Contact = await this.api.getContact(
@@ -106,103 +104,22 @@ class hooksService implements HookServiceInterface {
 
 			const customFields = contactFullInfo.custom_fields_values;
 
-			if (!customFields) {
-				throw new Error("кастомное поле не найдено");
-			}
+			const leadServiceList = lead.custom_fields?.find((field)=>Number(field.id || field.field_id) === CUSTOM_FIELDS_ID.LEAD.SERVICES.ID);
 
-			const ultrasonikLiftingField = customFields.find(
-				(field) =>
-					(field.id || field.field_id) ===
-					CUSTOM_FIELDS_ID.CONTACT.ULTRASONIC_LIFTING
-			);
-			const lazerRejuvenationField = customFields.find(
-				(field) =>
-					(field.id || field.field_id) ===
-					CUSTOM_FIELDS_ID.CONTACT.LAZER_REJUVENATION
-			);
-			const lazerRemovalField = customFields.find(
-				(field) =>
-					(field.id || field.field_id) ===
-					CUSTOM_FIELDS_ID.CONTACT.LAZER_REMOVAL
-			);
-			const correctionOfFacialWrinklesField = customFields.find(
-				(field) =>
-					(field.id || field.field_id) ===
-					CUSTOM_FIELDS_ID.CONTACT.CORRECTION_OF_FACIAL_WRINKLES
-			);
-			const lazerHairRemovalField = customFields.find(
-				(field) =>
-					(field.id || field.field_id) ===
-					CUSTOM_FIELDS_ID.CONTACT.LAZER_HAIR_REMOVAL
-			);
-
-			const contactPriceInfo: { [key: string]: number } = {
-				ultrasonikLifting:
-					typeof ultrasonikLiftingField?.values[0] === "object"
-						? Number(ultrasonikLiftingField.values[0].value)
-						: 0,
-				lazerRejuvenation:
-					typeof lazerRejuvenationField?.values[0] === "object"
-						? Number(lazerRejuvenationField.values[0].value)
-						: 0,
-				lazerRemoval:
-					typeof lazerRemovalField?.values[0] === "object"
-						? Number(lazerRemovalField.values[0].value)
-						: 0,
-				correctionOfFacialWrinkles:
-					typeof correctionOfFacialWrinklesField?.values[0] === "object"
-						? Number(correctionOfFacialWrinklesField.values[0].value)
-						: 0,
-				lazerHairRemoval:
-					typeof lazerHairRemovalField?.values[0] === "object"
-						? Number(lazerHairRemovalField.values[0].value)
-						: 0,
-			};
-
-			let totalPrice = 0;
-
-			if (lead.custom_fields) {
-				const leadServicesList = lead.custom_fields.find(
-					(field) =>
-						Number(field.id || field.field_id) ===
-						CUSTOM_FIELDS_ID.LEAD.SERVICES.ID
-				);
-
-				if (leadServicesList) {
-					const leadServices: { [key: string]: boolean } = {
-						ultrasonikLifting: checkValueByEnumId(
-							leadServicesList,
-							CUSTOM_FIELDS_ID.LEAD.SERVICES.ULTRASONIC_LIFTING
-						),
-						lazerRejuvenation: checkValueByEnumId(
-							leadServicesList,
-							CUSTOM_FIELDS_ID.LEAD.SERVICES.LAZER_REJUVENATION
-						),
-						lazerRemoval: checkValueByEnumId(
-							leadServicesList,
-							CUSTOM_FIELDS_ID.LEAD.SERVICES.LAZER_REMOVAL
-						),
-						correctionOfFacialWrinkles: checkValueByEnumId(
-							leadServicesList,
-							CUSTOM_FIELDS_ID.LEAD.SERVICES.CORRECTION_OF_FACIAL_WRINKLES
-						),
-						lazerHairRemoval: checkValueByEnumId(
-							leadServicesList,
-							CUSTOM_FIELDS_ID.LEAD.SERVICES.LAZER_HAIR_REMOVAL
-						),
-					};
-
-					for (let service in contactPriceInfo) {
-						if (
-							leadServices.hasOwnProperty(service) &&
-							contactPriceInfo.hasOwnProperty(service) &&
-							leadServices[service]
-						) {
-							totalPrice += Number(contactPriceInfo[service]);
-						}
-					}
+			const priceReduce = leadServiceList?.values.reduce((summ, value) => {
+				
+				const serviceName = typeof value === 'object' && value.value
+				const servicePriceField = customFields?.find((field) => (field.name || field.field_name) === serviceName);
+				if (servicePriceField && typeof servicePriceField.values[0] === 'object') {
+					const servicePrice = Number(servicePriceField.values[0].value);
+					summ.price += servicePrice;
+					return summ;
+				} else {
+					return summ;
 				}
-			}
+			}, {price : 0});
+
+			const totalPrice = priceReduce?.price ? priceReduce.price : 0;
 
 			const updateDealDTO: UpdateDeal[] = [
 				{
@@ -215,8 +132,7 @@ class hooksService implements HookServiceInterface {
 				await this.api.updateDeals(updateDealDTO);
 			}
 		});
-
-		return true;
+		this.logger.debug('Сумма сделки изменена');
 	}
 }
 
