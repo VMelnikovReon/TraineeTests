@@ -17,6 +17,9 @@ import { UpdateDealsRes } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/U
 import axios from "axios";
 import { ERRORS } from "../infrastructure/consts";
 import { EntityLinksDTO, Link } from "../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
+import { CreateTaskDTO } from "../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTaskDTO";
+import { TaskFilter } from "../infrastructure/types/AmoApi/AmoApiReq/Filters/TasksFilter";
+import { Task } from "../infrastructure/types/AmoApi/AmoApiRes/Task/Task";
 
 const querystring = require("querystring");
 const fs = require("fs");
@@ -238,6 +241,19 @@ export class Api {
 				});
 		}
 	);
+
+	public createTask = this.authChecker((body:CreateTaskDTO[]) : Promise<void>=>{
+		return axios
+			.post(`${this.ROOT_PATH}/api/v4/tasks`, body, this.createReqConfig({Auth:true}));
+	})
+
+	public getTasks = this.authChecker((limit = 10,page = 1,filter: TaskFilter = {}) : Promise<Task[]>=>{
+		return axios
+			.get<Task[]>(`${this.ROOT_PATH}/api/v4/tasks?${querystring.stringify({
+				...filter,
+			})}`, this.createReqConfig({Auth:true}))
+			.then((res)=>res.data);
+	})
 }
 
 module.exports = new Api();

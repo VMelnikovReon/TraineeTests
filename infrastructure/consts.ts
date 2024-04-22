@@ -22,6 +22,10 @@ export const CUSTOM_FIELDS_ID = {
 	
 };
 
+export const TASK_TYPES = {
+	CHECK: 3354374
+}
+
 export const ROUTES = {
 	HOOKS: {
 		HOME_ROUTE: '/hooks',
@@ -40,4 +44,9 @@ export const AMO_ENTITYES = {
 	LEADS : 'leads',
 }
 
-export const MSEC_PER_SEC = 1000;
+export const TIMESTAMP = {
+	MSEC_PER_SEC: 1000,
+	MSEC_PER_MIN : 1000*60,
+	MSEC_PER_HOUR : 1000*60*60,
+	MSEC_PER_DAY : 1000*60*60*24
+}

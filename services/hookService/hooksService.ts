@@ -1,7 +1,8 @@
 import {
 	AMO_ENTITYES,
 	CUSTOM_FIELDS_ID,
-	MSEC_PER_SEC,
+	TASK_TYPES,
+	TIMESTAMP,
 } from "../../infrastructure/consts";
 import { ServiceError } from "../../infrastructure/errors/ServiceError";
 import { calculateAge } from "../../infrastructure/helpers/calculateAge";
@@ -12,6 +13,7 @@ import { makeField } from "../../infrastructure/utils";
 import { UpdateDealReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateDealReq";
 import { Link } from "../../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
 import { UpdateDeal } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
+import { CreateTaskDTO } from "../../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTaskDTO";
 
 class hooksService implements HookServiceInterface {
 	private api = require("../../api/api");
@@ -52,7 +54,7 @@ class hooksService implements HookServiceInterface {
 		}
 
 		const birthdayDate = new Date(
-			Number(BirthdayDateCustomField.values[0]) * MSEC_PER_SEC
+			Number(BirthdayDateCustomField.values[0]) * TIMESTAMP.MSEC_PER_SEC
 		);
 
 		const age = calculateAge(birthdayDate);
@@ -132,6 +134,19 @@ class hooksService implements HookServiceInterface {
 
 			if (Number(lead.price) !== updateDealDTO[0].price) {
 				await this.api.updateDeals(updateDealDTO);
+
+				const createTaskDTO : CreateTaskDTO[] = [
+					{
+						entity_id : Number(lead.id),
+						entity_type: AMO_ENTITYES.LEADS,
+						task_type_id: TASK_TYPES.CHECK,
+						text: 'Проверить бюджет',
+						responsible_user_id: Number(lead.responsible_user_id),
+						complete_till : new Date(new Date().getDate() + 1).getTime()
+					}
+				]
+
+				await this.api.createTask(createTaskDTO);
 			}
 		});
 		this.logger.debug('Сумма сделки изменена');
