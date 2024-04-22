@@ -14,6 +14,8 @@ import { UpdateDealReq } from "../../infrastructure/types/AmoApi/WebHooks/Update
 import { Link } from "../../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
 import { UpdateDeal } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
 import { CreateTaskDTO } from "../../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTaskDTO";
+import { TaskFilter } from "../../infrastructure/types/AmoApi/AmoApiReq/Filters/TasksFilter";
+import { GetTaskResponse } from "../../infrastructure/types/AmoApi/AmoApiRes/Task/GetTasksRes";
 
 class hooksService implements HookServiceInterface {
 	private api = require("../../api/api");
@@ -135,6 +137,20 @@ class hooksService implements HookServiceInterface {
 			if (Number(lead.price) !== updateDealDTO[0].price) {
 				await this.api.updateDeals(updateDealDTO);
 
+				const taskFilter : TaskFilter = {
+					'filter[entity_id]': lead.id,
+					'filter[entity_type]' : AMO_ENTITYES.LEADS,
+					'filter[is_completed]' : 0,
+					'filter[task_type]' : TASK_TYPES.CHECK,
+				}
+				
+				const unComplitedTasks : any = await this.api.getTasks(10,1,taskFilter);
+				
+				if (unComplitedTasks){
+					console.log(unComplitedTasks._embedded.tasks.length);
+					return;
+				}
+
 				const createTaskDTO : CreateTaskDTO[] = [
 					{
 						entity_id : Number(lead.id),
@@ -142,7 +158,7 @@ class hooksService implements HookServiceInterface {
 						task_type_id: TASK_TYPES.CHECK,
 						text: 'Проверить бюджет',
 						responsible_user_id: Number(lead.responsible_user_id),
-						complete_till : new Date(new Date().getDate() + 1).getTime()
+						complete_till : Math.floor((new Date().getTime() / TIMESTAMP.MSEC_PER_SEC) + (TIMESTAMP.MSEC_PER_DAY / TIMESTAMP.MSEC_PER_SEC))
 					}
 				]
 

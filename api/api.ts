@@ -20,6 +20,7 @@ import { EntityLinksDTO, Link } from "../infrastructure/types/AmoApi/AmoApiReq/E
 import { CreateTaskDTO } from "../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTaskDTO";
 import { TaskFilter } from "../infrastructure/types/AmoApi/AmoApiReq/Filters/TasksFilter";
 import { Task } from "../infrastructure/types/AmoApi/AmoApiRes/Task/Task";
+import { GetTaskResponse } from "../infrastructure/types/AmoApi/AmoApiRes/Task/GetTasksRes";
 
 const querystring = require("querystring");
 const fs = require("fs");
@@ -247,9 +248,9 @@ export class Api {
 			.post(`${this.ROOT_PATH}/api/v4/tasks`, body, this.createReqConfig({Auth:true}));
 	})
 
-	public getTasks = this.authChecker((limit = 10,page = 1,filter: TaskFilter = {}) : Promise<Task[]>=>{
+	public getTasks = this.authChecker((limit = 10,page = 1,filter: TaskFilter = {}) : Promise<GetTaskResponse>=>{
 		return axios
-			.get<Task[]>(`${this.ROOT_PATH}/api/v4/tasks?${querystring.stringify({
+			.get<GetTaskResponse>(`${this.ROOT_PATH}/api/v4/tasks?${querystring.stringify({
 				...filter,
 			})}`, this.createReqConfig({Auth:true}))
 			.then((res)=>res.data);
