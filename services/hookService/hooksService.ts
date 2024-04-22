@@ -108,9 +108,9 @@ class hooksService implements HookServiceInterface {
 
 			const leadServiceList = lead.custom_fields?.find((field)=>Number(field.id || field.field_id) === CUSTOM_FIELDS_ID.LEAD.SERVICES.ID);
 
-			const priceReduce = leadServiceList?.values.reduce((summ, value) => {
+			const priceReduce = leadServiceList?.values.reduce((summ, field) => {
 				
-				const serviceName = typeof value === 'object' && value.value
+				const serviceName = typeof field === 'object' && field.value
 				const servicePriceField = customFields?.find((field) => (field.name || field.field_name) === serviceName);
 				if (servicePriceField && typeof servicePriceField.values[0] === 'object') {
 					const servicePrice = Number(servicePriceField.values[0].value);
