@@ -1,14 +1,9 @@
 import {
 	AMO_ENTITYES,
 	CUSTOM_FIELDS_ID,
-	MSEC_PER_SEC,
 } from "../../infrastructure/consts";
-import { ServiceError } from "../../infrastructure/errors/ServiceError";
-import { calculateAge } from "../../infrastructure/helpers/calculateAge";
 import { Contact } from "../../infrastructure/types/AmoApi/AmoApiRes/Contact/Contact";
 import { HookServiceInterface } from "./HookServiceInterface";
-import { UpdateContact } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateContact";
-import { makeField } from "../../infrastructure/utils";
 import { UpdateDealReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateDealReq";
 import { Link } from "../../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
 import { UpdateDeal } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
@@ -30,59 +25,6 @@ class hooksService implements HookServiceInterface {
 		}
 	}
 
-	public async addContact(contact: Contact): Promise<void> {
-		const customFields = contact.custom_fields || contact.custom_fields_values;
-
-		if (!customFields) {
-			throw new Error("кастомные поля не найдены");
-		}
-
-		const BirthdayDateCustomField = customFields.find(
-			(field) =>
-				Number(field.field_id || field.id) ===
-				CUSTOM_FIELDS_ID.CONTACT.BIRTHDAY_DATE
-		);
-
-		if (!BirthdayDateCustomField) {
-			throw ServiceError.BadRequest("отсутствует поле с датой");
-		}
-
-		if (typeof Number(BirthdayDateCustomField.values[0]) !== "number") {
-			throw ServiceError.BadRequest("поле с датой имеет не правильный тип");
-		}
-
-		const birthdayDate = new Date(
-			Number(BirthdayDateCustomField.values[0]) * MSEC_PER_SEC
-		);
-
-		const age = calculateAge(birthdayDate);
-
-		const newAgeField = makeField(
-			CUSTOM_FIELDS_ID.CONTACT.BIRTHDAY_DATE,
-			age,
-			1
-		);
-
-		if (!newAgeField) {
-			throw new Error();
-		}
-
-		const updateContactBody: UpdateContact[] = [
-			{
-				id: Number(contact.id),
-				custom_fields_values: [
-					{
-						field_id: CUSTOM_FIELDS_ID.CONTACT.AGE,
-						values: [{ value: String(age) }],
-					},
-				],
-			},
-		];
-
-		await this.api.UpdateContact(updateContactBody);
-
-		this.logger.debug('возраст добавлен');
-	}
 
 	public async updateDeal(deals: UpdateDealReq): Promise<void> {
 		deals.leads.update.forEach(async (lead) => {

@@ -1,4 +1,4 @@
-import express, { Router } from "express";
+import  { Router } from "express";
 import { ROUTES } from "../infrastructure/consts";
 
 const hooksRouter = require("./hooksRouter");
