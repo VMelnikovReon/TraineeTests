@@ -1,4 +1,4 @@
-import { Account } from "../AmoApiRes/Account/Account"
+import { Account } from "../../AmoApiRes/Account/Account"
 import { UpdateDealDTO } from "./UpdateDealDTO";
 
 export type UpdateDealReq = {

@@ -17,10 +17,11 @@ import { UpdateDealsRes } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/U
 import axios from "axios";
 import { ERRORS } from "../infrastructure/consts";
 import { EntityLinksDTO, Link } from "../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
-import { CreateTaskDTO } from "../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTaskDTO";
+import { CreateTaskDTO } from "../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTask";
 import { TaskFilter } from "../infrastructure/types/AmoApi/AmoApiReq/Filters/TasksFilter";
 import { Task } from "../infrastructure/types/AmoApi/AmoApiRes/Task/Task";
 import { GetTaskResponse } from "../infrastructure/types/AmoApi/AmoApiRes/Task/GetTasksRes";
+import { CreateNoteDTO } from "../infrastructure/types/AmoApi/AmoApiReq/Create/CreateNotes/CreateNoteDTO";
 
 const querystring = require("querystring");
 const fs = require("fs");
@@ -254,6 +255,13 @@ export class Api {
 				...filter,
 			})}`, this.createReqConfig({Auth:true}))
 			.then((res)=>res.data);
+	})
+
+	public createNote = this.authChecker((body:CreateNoteDTO[], entityType:string, entityId?:number) : Promise<void>=>{
+		const entityIdUri = entityId ? `/${entityId}` : '';
+
+		return axios
+			.post(`${this.ROOT_PATH}/api/v4/${entityType}${entityIdUri}/notes`, body, this.createReqConfig({Auth:true}));
 	})
 }
 
