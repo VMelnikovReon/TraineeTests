@@ -8,5 +8,3 @@ app
 	.addRouters("/api")
 	.addErrorHandlers()
 	.run();
-
-api.getAccessToken().then(() => console.log("токен получен"));

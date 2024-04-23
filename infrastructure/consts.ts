@@ -6,8 +6,11 @@ export const CUSTOM_FIELDS_ID = {
 export const ROUTES = {
 	HOOKS: {
 		HOME_ROUTE: '/hooks',
-		ADD_CONTACR_ROUTE : '/addcontact',
-		UPDATE_DEAL_ROUTE : '/updatedeal'
+	},
+	WIDGET:{
+		HOME_ROUTE: '/widget',
+		INSTALL: '/install',
+		DELETE: '/delete',
 	},
 	PING_ROUTE: '/ping'
 }

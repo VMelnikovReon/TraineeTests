@@ -1,4 +1,4 @@
-import { Express } from "express";
+import { Express, Request } from "express";
 import { errorHandlerMiddleware } from "./infrastructure/errors/errorHandlerMiddleware";
 
 const express = require("express");
@@ -15,6 +15,9 @@ export class CustomApplication {
 
 	public addRouters(path: string): CustomApplication {
 		this.app.use(path, mainRouter);
+		this.app.get('/widget/install', (req : Request,res)=>{
+			console.log(req.body);
+		});
 		return this;
 	}
 

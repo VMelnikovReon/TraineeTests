@@ -1,10 +1,10 @@
-import express, { Router } from "express";
+import express, { Router, Request } from "express";
 import { ROUTES } from "../infrastructure/consts";
 
-const hooksRouter = require("./hooksRouter");
+const widgetRouter = require("./widgetRouter");
 
 const router = Router();
 
-router.use(ROUTES.HOOKS.HOME_ROUTE, hooksRouter);
+router.use(ROUTES.WIDGET.HOME_ROUTE, widgetRouter);
 
 module.exports = router;

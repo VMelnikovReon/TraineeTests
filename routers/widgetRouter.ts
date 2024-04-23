@@ -4,16 +4,24 @@ import { ROUTES } from "../infrastructure/consts";
 import { Request, Response } from "express";
 import { CreateContactBody } from "../infrastructure/types/AmoApi/WebHooks/CreateContaktReq";
 import { HttpStatusCode } from "axios";
+import { WidgetInstallReq } from "../infrastructure/types/AmoApi/AmoApiReq/Widget/WidgetInstallReq";
+import { saveToken } from "../infrastructure/helpers/SaveToken";
 
 const logger = require("../infrastructure/logger");
 const router = Router();
-const hooksService = require("../services/hookService/hooksService");
+const widgetService = require("../services/widgetService/widgetService");
 
-router.post(
-	ROUTES.HOOKS.ADD_CONTACR_ROUTE,
+router.get(
+	ROUTES.WIDGET.INSTALL,
+	async (req : Request<{}, {}, {}, WidgetInstallReq>, res: Response) => {
+		saveToken(req.query);
+	}
+);
+
+router.get(
+	ROUTES.WIDGET.DELETE,
 	async (req: Request<{}, {}, CreateContactBody>, res: Response) => {
-		const status = await hooksService.addContact(req.body.contacts.add[0]);
-		res.status(HttpStatusCode.Ok);
+		console.log(req.query);
 	}
 );
 

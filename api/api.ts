@@ -25,7 +25,7 @@ const logger = require("../infrastructure/logger");
 
 axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 
-const AMO_TOKEN_PATH = "amo_token.json";
+const AMO_TOKEN_PATH = "./tokens/";
 
 const LIMIT = 200;
 
