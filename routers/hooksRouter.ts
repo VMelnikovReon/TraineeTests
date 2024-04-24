@@ -10,13 +10,6 @@ const logger = require("../infrastructure/logger");
 const router = Router();
 const hooksService = require("../services/hookService/hooksService");
 
-router.post(
-	ROUTES.HOOKS.ADD_CONTACR_ROUTE,
-	async (req: Request<{}, {}, CreateContactBody>, res: Response) => {
-		const status = await hooksService.addContact(req.body.contacts.add[0]);
-		res.status(HttpStatusCode.Ok);
-	}
-);
 
 router.post(
 	ROUTES.HOOKS.UPDATE_DEAL_ROUTE,
