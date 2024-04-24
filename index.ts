@@ -1,7 +1,6 @@
 import { CustomApplication } from "./CustomApp";
-import mongoose from "mongoose";
+import api from "./api/api";
 
-const api = require("./api/api");
 const app = new CustomApplication();
 
 const connectionString = 'mongodb://127.0.0.1:27017/traineTest';

@@ -1,10 +1,8 @@
 import { Express, Request } from "express";
 import { errorHandlerMiddleware } from "./infrastructure/errors/errorHandlerMiddleware";
-
-const express = require("express");
-const mainRouter = require("./routers/mainRouter");
-const config = require("./config");
-const logger = require("./infrastructure/logger");
+import express from 'express';
+import config from "./config";
+import logger from "./infrastructure/logger";
 
 export class CustomApplication {
 	private app: Express;
@@ -14,10 +12,7 @@ export class CustomApplication {
 	}
 
 	public addRouters(path: string): CustomApplication {
-		this.app.use(path, mainRouter);
-		this.app.get('/widget/install', (req : Request,res)=>{
-			console.log(req.body);
-		});
+		
 		return this;
 	}
 
