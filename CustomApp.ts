@@ -1,4 +1,4 @@
-import { Express, Request } from "express";
+import { Express } from "express";
 import { errorHandlerMiddleware } from "./infrastructure/errors/errorHandlerMiddleware";
 import express from 'express';
 import config from "./config";

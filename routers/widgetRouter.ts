@@ -6,10 +6,10 @@ import { CreateContactBody } from "../infrastructure/types/AmoApi/WebHooks/Creat
 import { HttpStatusCode } from "axios";
 import { WidgetInstallReq } from "../infrastructure/types/AmoApi/AmoApiReq/Widget/WidgetInstallReq";
 import { saveToken } from "../infrastructure/helpers/tokenAcitions";
+import logger from "../infrastructure/logger";
+import widgetService from "../services/widgetService/widgetService";
 
-const logger = require("../infrastructure/logger");
 const router = Router();
-const widgetService = require("../services/widgetService/widgetService");
 
 router.get(
 	ROUTES.WIDGET.INSTALL,
@@ -27,4 +27,4 @@ router.get(
 	}
 );
 
-module.exports = router;
+export default router;

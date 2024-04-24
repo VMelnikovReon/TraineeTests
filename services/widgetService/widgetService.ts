@@ -16,4 +16,4 @@ class hooksService implements WidgetServiceInterface {
 	}
 }
 
-module.exports = new hooksService();
+export default new hooksService();

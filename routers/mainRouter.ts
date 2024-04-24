@@ -1,7 +1,6 @@
 import express, { Router, Request } from "express";
 import { ROUTES } from "../infrastructure/consts";
-
-const widgetRouter = require("./widgetRouter");
+import widgetRouter from './widgetRouter';
 
 const router = Router();
 
