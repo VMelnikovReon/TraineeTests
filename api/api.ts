@@ -12,22 +12,20 @@ import { DealsResponse } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/De
 import { UpdateDeal } from "../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
 import { Filters } from "../infrastructure/types/AmoApi/Filters";
 import { UpdateContact } from "../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateContact";
-import { UpdateContactRes } from "../infrastructure/types/AmoApi/AmoApiRes/Contact/UpdateContactRes";
-import { UpdateDealsRes } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/UpdateDealsRes";
 import axios from "axios";
 import { ERRORS } from "../infrastructure/consts";
 import { EntityLinksDTO, Link } from "../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
-import { CreateTaskDTO } from "../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTask";
-import { TaskFilter } from "../infrastructure/types/AmoApi/AmoApiReq/Filters/TasksFilter";
-import { Task } from "../infrastructure/types/AmoApi/AmoApiRes/Task/Task";
+import querystring from 'querystring';
+import fs from 'fs';
+import axiosRetry from "axios-retry";
+import config from '../config';
+import logger from "../infrastructure/logger";
+import { TaskQueryParams } from "../infrastructure/types/AmoApi/AmoApiReq/QueryParams/TasksQueryParams";
 import { GetTaskResponse } from "../infrastructure/types/AmoApi/AmoApiRes/Task/GetTasksRes";
+import { Task } from "../infrastructure/types/AmoApi/AmoApiRes/Task/Task";
+import { CreateTaskDTO } from "../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTask";
 import { CreateNoteDTO } from "../infrastructure/types/AmoApi/AmoApiReq/Create/CreateNotes/CreateNoteDTO";
 
-const querystring = require("querystring");
-const fs = require("fs");
-const axiosRetry = require("axios-retry");
-const config = require("../config");
-const logger = require("../infrastructure/logger");
 
 axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 
@@ -102,7 +100,7 @@ export class Api {
 			});
 	}
 
-	private getAccessToken = async (): Promise<
+	public getAccessToken = async (): Promise<
 		string | TokenResponse | AxiosError
 	> => {
 		if (this.access_token) {
@@ -110,7 +108,7 @@ export class Api {
 		}
 		try {
 			const content = fs.readFileSync(AMO_TOKEN_PATH);
-			const token: TokenResponse = JSON.parse(content);
+			const token: TokenResponse = JSON.parse(content.toString());
 			this.access_token = token.access_token;
 			this.refresh_token = token.refresh_token;
 			return Promise.resolve(token);
@@ -190,7 +188,7 @@ export class Api {
 
 	// Обновить сделки
 	public updateDeals = this.authChecker(
-		(data: UpdateDeal[]): Promise<UpdateDealsRes> => {
+		(data: UpdateDeal[]): Promise<void> => {
 			return axios.patch(
 				`${this.ROOT_PATH}/api/v4/leads`,
 				data,
@@ -213,7 +211,7 @@ export class Api {
 
 	// Обновить контакты
 	public updateContacts = this.authChecker(
-		(data: UpdateContact[]): Promise<UpdateContactRes> => {
+		(data: UpdateContact[]): Promise<void> => {
 			console.log(data);
 			return axios.patch(
 				`${this.ROOT_PATH}/api/v4/contacts`,
@@ -225,9 +223,9 @@ export class Api {
 
 	public getLinkEntityes = this.authChecker(
 		(
-			targetEntity: "leads" | "contacts" | "companies" | "customers",
+			targetEntity: 'leads' | "contacts" | "companies" | "customers",
 			id: number,
-			filters: Filters
+			filters: Filters = {}
 		): Promise<Link[]> => {
 			return axios
 				.get<EntityLinksDTO>(
@@ -249,12 +247,12 @@ export class Api {
 			.post(`${this.ROOT_PATH}/api/v4/tasks`, body, this.createReqConfig({Auth:true}));
 	})
 
-	public getTasks = this.authChecker((limit = 10,page = 1,filter: TaskFilter = {}) : Promise<GetTaskResponse>=>{
+	public getTasks = this.authChecker((quetyParams: TaskQueryParams) : Promise<Task[]>=>{
 		return axios
 			.get<GetTaskResponse>(`${this.ROOT_PATH}/api/v4/tasks?${querystring.stringify({
-				...filter,
+				...quetyParams,
 			})}`, this.createReqConfig({Auth:true}))
-			.then((res)=>res.data);
+			.then((res)=>res.data._embedded.tasks);
 	})
 
 	public createNote = this.authChecker((body:CreateNoteDTO[], entityType:string, entityId?:number) : Promise<void>=>{
@@ -265,4 +263,4 @@ export class Api {
 	})
 }
 
-module.exports = new Api();
+export default new Api();

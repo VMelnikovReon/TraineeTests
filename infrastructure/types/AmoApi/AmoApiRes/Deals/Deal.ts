@@ -1,6 +1,4 @@
-import { Company } from "../Company/Company";
 import { CustomField } from "../../CustomField";
-import { Tag } from "../../Tag";
 
 export type Deal = {
 	id: number;

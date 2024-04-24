@@ -50,8 +50,7 @@ export const TASKS = {
 export const ROUTES = {
 	HOOKS: {
 		HOME_ROUTE: '/hooks',
-		UPDATE_DEAL_ROUTE : '/updatedeal',
-		UPDATE_TASK_ROUTE : '/updatetask'
+		UPDATE_DEAL_ROUTE : '/updatedeal'
 	},
 	PING_ROUTE: '/ping'
 }

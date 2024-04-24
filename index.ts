@@ -1,6 +1,6 @@
 import { CustomApplication } from "./CustomApp";
+import api from "./api/api";
 
-const api = require("./api/api");
 const app = new CustomApplication();
 
 app
