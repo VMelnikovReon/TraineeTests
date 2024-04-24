@@ -10,6 +10,7 @@ logs/
 
 # Файлы авторизации
 authclients/ 
+api/tokens/
 amo_token.json
 
 # Любые другие файлы проекта

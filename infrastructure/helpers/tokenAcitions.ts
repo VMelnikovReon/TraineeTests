@@ -3,16 +3,15 @@ import { WidgetInstallReq } from "../types/AmoApi/AmoApiReq/Widget/WidgetInstall
 const TOKEN_PATH = 'api/tokens/';
 const fs = require('fs');
 
-export const saveToken = (userInfo:WidgetInstallReq)=>{
+export const saveToken = (userInfo:WidgetInstallReq) : void=>{
     if (!fs.existsSync(TOKEN_PATH)) {
-        // Если не существует, создаем ее
         fs.mkdirSync(TOKEN_PATH, { recursive: true });
     }
 
     fs.writeFileSync(`${TOKEN_PATH}${userInfo.client_id}.json`,JSON.stringify(userInfo));
 }
 
-export const getToken = (user:string) : string=>{
-    const token = fs.readFileSync(TOKEN_PATH + user);
+export const getToken = (user:string) : WidgetInstallReq=>{
+    const token = fs.readFileSync(`${TOKEN_PATH}${user}.json`);
     return token;
 }
