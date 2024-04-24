@@ -16,12 +16,11 @@ import { UpdateContactRes } from "../infrastructure/types/AmoApi/AmoApiRes/Conta
 import { UpdateDealsRes } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/UpdateDealsRes";
 import axios from "axios";
 import { ERRORS } from "../infrastructure/consts";
-
-const querystring = require("querystring");
-const fs = require("fs");
-const axiosRetry = require("axios-retry");
-const config = require("../config");
-const logger = require("../infrastructure/logger");
+import querystring from 'querystring';
+import fs from 'fs';
+import axiosRetry from "axios-retry";
+import config from '../config'
+import logger from "../infrastructure/logger";
 
 axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 
@@ -96,7 +95,7 @@ export class Api {
 			});
 	}
 
-	private getAccessToken = async (): Promise<
+	public getAccessToken = async (): Promise<
 		string | TokenResponse | AxiosError
 	> => {
 		if (this.access_token) {
@@ -104,7 +103,7 @@ export class Api {
 		}
 		try {
 			const content = fs.readFileSync(AMO_TOKEN_PATH);
-			const token: TokenResponse = JSON.parse(content);
+			const token: TokenResponse = JSON.parse(content.toString());
 			this.access_token = token.access_token;
 			this.refresh_token = token.refresh_token;
 			return Promise.resolve(token);
@@ -218,4 +217,4 @@ export class Api {
 	);
 }
 
-module.exports = new Api();
+export default new Api();
