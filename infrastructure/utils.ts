@@ -5,9 +5,9 @@
  */
 
 import { CustomField, CustomValue } from "./types/AmoApi/CustomField";
+import fs from 'fs';
+import logger from "./logger";
 
-const fs = require("fs");
-const logger = require("../infrastructure/logger");
 
 /**
  * Функция извлекает значение из id поля, массива полей custom_fields сущности amoCRM

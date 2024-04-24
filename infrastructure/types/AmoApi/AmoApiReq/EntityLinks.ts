@@ -7,7 +7,7 @@ export type Link = {
 }
 
 export type EntityLinksDTO = {
-	_total_items:  4;
+	_total_items:  number;
 	_links:{
 		self:{
 			href:string;

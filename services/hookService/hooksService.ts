@@ -1,6 +1,7 @@
 import {
 	AMO_ENTITYES,
 	CUSTOM_FIELDS_ID,
+	TASK_TYPES,
 } from "../../infrastructure/consts";
 import { Contact } from "../../infrastructure/types/AmoApi/AmoApiRes/Contact/Contact";
 import { HookServiceInterface } from "./HookServiceInterface";
@@ -9,6 +10,9 @@ import { Link } from "../../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
 import { UpdateDeal } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
 import Api from "../../api/api";
 import logger from "../../infrastructure/logger";
+import { TaskQueryParams } from "../../infrastructure/types/AmoApi/AmoApiReq/QueryParams/TasksQueryParams";
+import { CreateTaskDTO } from "../../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTaskDTO";
+import { getDateInUtc } from "../../infrastructure/helpers/getDateInUTC";
 
 
 class hooksService implements HookServiceInterface {
@@ -80,6 +84,36 @@ class hooksService implements HookServiceInterface {
 
 			await this.api.updateDeals(updateDealDTO);
 			this.logger.debug('Сумма сделки изменена');
+
+			const taskFilter : TaskQueryParams = {
+				page:1,
+				limit:10,
+				'filter[entity_id]': lead.id,
+				'filter[entity_type]' : AMO_ENTITYES.LEADS,
+				'filter[is_completed]' : 0,
+				'filter[task_type]' : TASK_TYPES.CHECK,
+			}
+			
+			const unComplitedTasks = await this.api.getTasks(taskFilter);
+			
+			if (unComplitedTasks){
+				this.logger.debug('не требуется создавать задачу');
+				return;
+			}
+
+			const createTaskDTO : CreateTaskDTO[] = [
+				{
+					entity_id : Number(lead.id),
+					entity_type: AMO_ENTITYES.LEADS,
+					task_type_id: TASK_TYPES.CHECK,
+					text: 'Проверить бюджет',
+					responsible_user_id: Number(lead.responsible_user_id),
+					complete_till : getDateInUtc('in one day')
+				}
+			]
+
+			await this.api.createTask(createTaskDTO);
+			this.logger.debug('Таска создана');
 		}
 	}
 }

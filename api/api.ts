@@ -12,8 +12,6 @@ import { DealsResponse } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/De
 import { UpdateDeal } from "../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
 import { Filters } from "../infrastructure/types/AmoApi/Filters";
 import { UpdateContact } from "../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateContact";
-import { UpdateContactRes } from "../infrastructure/types/AmoApi/AmoApiRes/Contact/UpdateContactRes";
-import { UpdateDealsRes } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/UpdateDealsRes";
 import axios from "axios";
 import { ERRORS } from "../infrastructure/consts";
 import { EntityLinksDTO, Link } from "../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
@@ -22,6 +20,10 @@ import fs from 'fs';
 import axiosRetry from "axios-retry";
 import config from '../config';
 import logger from "../infrastructure/logger";
+import { CreateTaskDTO } from "../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTaskDTO";
+import { TaskQueryParams } from "../infrastructure/types/AmoApi/AmoApiReq/QueryParams/TasksQueryParams";
+import { GetTaskResponse } from "../infrastructure/types/AmoApi/AmoApiRes/Task/GetTasksRes";
+import { Task } from "../infrastructure/types/AmoApi/AmoApiRes/Task/Task";
 
 
 axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
@@ -185,7 +187,7 @@ export class Api {
 
 	// Обновить сделки
 	public updateDeals = this.authChecker(
-		(data: UpdateDeal[]): Promise<UpdateDealsRes> => {
+		(data: UpdateDeal[]): Promise<void> => {
 			return axios.patch(
 				`${this.ROOT_PATH}/api/v4/leads`,
 				data,
@@ -208,7 +210,7 @@ export class Api {
 
 	// Обновить контакты
 	public updateContacts = this.authChecker(
-		(data: UpdateContact[]): Promise<UpdateContactRes> => {
+		(data: UpdateContact[]): Promise<void> => {
 			console.log(data);
 			return axios.patch(
 				`${this.ROOT_PATH}/api/v4/contacts`,
@@ -238,6 +240,19 @@ export class Api {
 				});
 		}
 	);
+
+	public createTask = this.authChecker((body:CreateTaskDTO[]) : Promise<void>=>{
+		return axios
+			.post(`${this.ROOT_PATH}/api/v4/tasks`, body, this.createReqConfig({Auth:true}));
+	})
+
+	public getTasks = this.authChecker((quetyParams: TaskQueryParams) : Promise<Task[]>=>{
+		return axios
+			.get<GetTaskResponse>(`${this.ROOT_PATH}/api/v4/tasks?${querystring.stringify({
+				...quetyParams,
+			})}`, this.createReqConfig({Auth:true}))
+			.then((res)=>res.data._embedded.tasks);
+	})
 }
 
 export default new Api();
