@@ -1,9 +1,8 @@
-import express, { Router, Request } from "express";
+import { Router } from "express";
 import { ROUTES } from "../infrastructure/consts";
 import widgetRouter from './widgetRouter';
 
-const router = Router();
+export const router = Router();
 
-router.use(ROUTES.WIDGET.HOME_ROUTE, widgetRouter);
+router.use(ROUTES.WIDGET.HOME_ROUTE, widgetRouter.router);
 
-module.exports = router;

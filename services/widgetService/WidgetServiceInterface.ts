@@ -3,5 +3,5 @@ import { Contact } from "../../infrastructure/types/AmoApi/AmoApiRes/Contact/Con
 
 export interface WidgetServiceInterface {
 	 installWidget:  (installInfo: WidgetInstallReq) => Promise<void>;
-	 deleteWidget:  (req: any) => Promise<void>;
+	 deleteWidget:  (req: WidgetInstallReq) => Promise<void>;
 }

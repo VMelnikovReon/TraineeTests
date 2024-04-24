@@ -3,6 +3,8 @@ import { errorHandlerMiddleware } from "./infrastructure/errors/errorHandlerMidd
 import express from 'express';
 import config from "./config";
 import logger from "./infrastructure/logger";
+import mongoose, { ConnectOptions } from "mongoose";
+import { router } from "./routers/mainRouter";
 
 export class CustomApplication {
 	private app: Express;
@@ -12,6 +14,14 @@ export class CustomApplication {
 	}
 
 	public addRouters(path: string): CustomApplication {
+		this.app.use(path, router)
+		return this;
+	}
+
+	public connectDB(connectionString:string, options: ConnectOptions){
+		mongoose.connect(connectionString, options)
+			.then(logger.debug('подключение к бд прошло успешно'))
+			.catch((err)=>logger.debug(err))
 		
 		return this;
 	}

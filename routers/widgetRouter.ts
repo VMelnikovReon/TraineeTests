@@ -1,30 +1,39 @@
 // hooksRouter.ts
-import { Router } from "express";
+import {Router} from 'express';
 import { ROUTES } from "../infrastructure/consts";
 import { Request, Response } from "express";
-import { CreateContactBody } from "../infrastructure/types/AmoApi/WebHooks/CreateContaktReq";
-import { HttpStatusCode } from "axios";
 import { WidgetInstallReq } from "../infrastructure/types/AmoApi/AmoApiReq/Widget/WidgetInstallReq";
-import { saveToken } from "../infrastructure/helpers/tokenAcitions";
-import logger from "../infrastructure/logger";
 import widgetService from "../services/widgetService/widgetService";
+import { WidgetServiceInterface } from '../services/widgetService/WidgetServiceInterface';
 
-const router = Router();
+class WidgetRouter{
+	public router;
+	private readonly widgetService;
 
-router.get(
-	ROUTES.WIDGET.INSTALL,
-	async (req : Request<{}, {}, {}, WidgetInstallReq>, res: Response) => {
-		widgetService.installWidget(req.query);
-		res.status(200).send();
+	constructor(widgetServise : WidgetServiceInterface){
+		this.router = Router();
+		this.widgetService = widgetServise;
+
+		this.router.get(
+			ROUTES.WIDGET.INSTALL,
+			async (req : Request<{}, {}, {}, WidgetInstallReq>, res: Response) => {
+				this.widgetService.installWidget(req.query);
+				console.log('install');
+				res.status(200).send();
+			}
+		);
+		
+		this.router.get(
+			ROUTES.WIDGET.DELETE,
+			async (req: Request<{}, {}, {}, WidgetInstallReq>, res: Response) => {
+				this.widgetService.deleteWidget(req.query);
+				console.log('delete');
+				res.status(200).send();
+			}
+		);
 	}
-);
+}
 
-router.get(
-	ROUTES.WIDGET.DELETE,
-	async (req: Request<{}, {}, {}, {}>, res: Response) => {
-		widgetService.deleteWidget(req.query);
-		res.status(200).send();
-	}
-);
 
-export default router;
+
+export default new WidgetRouter(widgetService);
