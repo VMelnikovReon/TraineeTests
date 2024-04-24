@@ -16,6 +16,7 @@ import { CreateTaskDTO } from "../../infrastructure/types/AmoApi/AmoApiReq/Creat
 import { UpdateTaskReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateTask/UpdateTaskReq";
 import { CreateNoteDTO } from "../../infrastructure/types/AmoApi/AmoApiReq/Create/CreateNotes/CreateNoteDTO";
 import { UpdateDealReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateDeal/UpdateDealReq";
+import { ActionClose } from "../../infrastructure/types/AmoApi/WebHooks/UpdateTask/UpdateTaskDTO";
 
 
 class hooksService implements HookServiceInterface {
@@ -122,7 +123,7 @@ class hooksService implements HookServiceInterface {
 	public async updateTask(tasks: UpdateTaskReq): Promise<void> {
 		const taskList = tasks.task.update;
 
-		const correctTasks = taskList.filter((task) => (Number(task.action_close) === 1 && Number(task.task_type) === TASKS.TASK_TYPES.CHECK && task.text === TASKS.TASK_VALUES.CHECK_PRICE && Number(task.element_type) === AMO_ENTITYES.TYPES_ID.LEADS));
+		const correctTasks = taskList.filter((task) => (Number(task.action_close) === ActionClose.Yes && Number(task.task_type) === TASKS.TASK_TYPES.CHECK && task.text === TASKS.TASK_VALUES.CHECK_PRICE && Number(task.element_type) === AMO_ENTITYES.TYPES_ID.LEADS));
 
 		if (!correctTasks) {
 			return;
