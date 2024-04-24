@@ -2,23 +2,22 @@ import {
 	AMO_ENTITYES,
 	CUSTOM_FIELDS_ID,
 	TASK_TYPES,
-	TIMESTAMP,
 } from "../../infrastructure/consts";
-import { ServiceError } from "../../infrastructure/errors/ServiceError";
 import { Contact } from "../../infrastructure/types/AmoApi/AmoApiRes/Contact/Contact";
 import { HookServiceInterface } from "./HookServiceInterface";
-import { UpdateContact } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateContact";
-import { makeField } from "../../infrastructure/utils";
 import { UpdateDealReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateDealReq";
 import { Link } from "../../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
 import { UpdateDeal } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
+import Api from "../../api/api";
+import logger from "../../infrastructure/logger";
+import { TaskQueryParams } from "../../infrastructure/types/AmoApi/AmoApiReq/QueryParams/TasksQueryParams";
 import { CreateTaskDTO } from "../../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTaskDTO";
-import { TaskFilter } from "../../infrastructure/types/AmoApi/AmoApiReq/Filters/TasksFilter";
-import { GetTaskResponse } from "../../infrastructure/types/AmoApi/AmoApiRes/Task/GetTasksRes";
+import { getDateInUtc } from "../../infrastructure/helpers/getDateInUTC";
+
 
 class hooksService implements HookServiceInterface {
-	private api = require("../../api/api");
-	private logger = require('../../infrastructure/logger');
+	private api = Api;
+	private logger = logger;
 
 	private getLeadContacts = (contactLinks: Link[]) : Link | null | undefined =>{
 		switch (contactLinks.length) {
@@ -35,9 +34,10 @@ class hooksService implements HookServiceInterface {
 
 
 	public async updateDeal(deals: UpdateDealReq): Promise<void> {
-		deals.leads.update.forEach(async (lead) => {
+
+		for (const lead of deals.leads.update){
 			const linkEntities: Link[] = await this.api.getLinkEntityes(
-				AMO_ENTITYES.LEADS,
+				'leads',
 				lead.id
 			);
 			const contacts = linkEntities.filter(
@@ -58,20 +58,22 @@ class hooksService implements HookServiceInterface {
 
 			const leadServiceList = lead.custom_fields?.find((field)=>Number(field.id || field.field_id) === CUSTOM_FIELDS_ID.LEAD.SERVICES.ID);
 
-			const priceReduce = leadServiceList?.values.reduce((summ, field) => {
+			const totalPrice = leadServiceList?.values.reduce((summ: number, field) : number => {
 				
 				const serviceName = typeof field === 'object' && field.value
 				const servicePriceField = customFields?.find((field) => (field.name || field.field_name) === serviceName);
 				if (servicePriceField && typeof servicePriceField.values[0] === 'object') {
 					const servicePrice = Number(servicePriceField.values[0].value);
-					summ.price += servicePrice;
+					summ += servicePrice;
 					return summ;
-				} else {
-					return summ;
-				}
-			}, {price : 0});
+				} 
+				return summ;
+			}, 0);
 
-			const totalPrice = priceReduce?.price ? priceReduce.price : 0;
+			if (Number(lead.price) === totalPrice){
+				this.logger.debug('Сумма не изменилась');
+				return;
+			}
 
 			const updateDealDTO: UpdateDeal[] = [
 				{
@@ -80,39 +82,40 @@ class hooksService implements HookServiceInterface {
 				},
 			];
 
-			if (Number(lead.price) !== updateDealDTO[0].price) {
-				await this.api.updateDeals(updateDealDTO);
+			await this.api.updateDeals(updateDealDTO);
+			this.logger.debug('Сумма сделки изменена');
 
-				const taskFilter : TaskFilter = {
-					'filter[entity_id]': lead.id,
-					'filter[entity_type]' : AMO_ENTITYES.LEADS,
-					'filter[is_completed]' : 0,
-					'filter[task_type]' : TASK_TYPES.CHECK,
-				}
-				
-				const unComplitedTasks : any = await this.api.getTasks(10,1,taskFilter);
-				
-				if (unComplitedTasks){
-					console.log(unComplitedTasks._embedded.tasks.length);
-					return;
-				}
-
-				const createTaskDTO : CreateTaskDTO[] = [
-					{
-						entity_id : Number(lead.id),
-						entity_type: AMO_ENTITYES.LEADS,
-						task_type_id: TASK_TYPES.CHECK,
-						text: 'Проверить бюджет',
-						responsible_user_id: Number(lead.responsible_user_id),
-						complete_till : Math.floor((new Date().getTime() / TIMESTAMP.MSEC_PER_SEC) + (TIMESTAMP.MSEC_PER_DAY / TIMESTAMP.MSEC_PER_SEC))
-					}
-				]
-
-				await this.api.createTask(createTaskDTO);
+			const taskFilter : TaskQueryParams = {
+				page:1,
+				limit:10,
+				'filter[entity_id]': lead.id,
+				'filter[entity_type]' : AMO_ENTITYES.LEADS,
+				'filter[is_completed]' : 0,
+				'filter[task_type]' : TASK_TYPES.CHECK,
 			}
-		});
-		this.logger.debug('Сумма сделки изменена');
+			
+			const unComplitedTasks = await this.api.getTasks(taskFilter);
+			
+			if (unComplitedTasks){
+				this.logger.debug('не требуется создавать задачу');
+				return;
+			}
+
+			const createTaskDTO : CreateTaskDTO[] = [
+				{
+					entity_id : Number(lead.id),
+					entity_type: AMO_ENTITYES.LEADS,
+					task_type_id: TASK_TYPES.CHECK,
+					text: 'Проверить бюджет',
+					responsible_user_id: Number(lead.responsible_user_id),
+					complete_till : getDateInUtc('in one day')
+				}
+			]
+
+			await this.api.createTask(createTaskDTO);
+			this.logger.debug('Таска создана');
+		}
 	}
 }
 
-module.exports = new hooksService();
+export default new hooksService();

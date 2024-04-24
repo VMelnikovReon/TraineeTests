@@ -1,4 +1,6 @@
-export type TaskFilter = {
+export type TaskQueryParams = {
+	limit:number,
+	page:number,
 	"filter[responsible_user_id]"? : number;
 	"filter[task_type]"? : number;
 	"filter[entity_type]"? : string;
