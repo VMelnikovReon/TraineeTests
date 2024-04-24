@@ -1,10 +1,9 @@
 import { Express } from "express";
 import { errorHandlerMiddleware } from "./infrastructure/errors/errorHandlerMiddleware";
-
-const express = require("express");
-const mainRouter = require("./routers/mainRouter");
-const config = require("./config");
-const logger = require("./infrastructure/logger");
+import express from "express";
+import mainRouter from './routers/mainRouter'
+import config from './config';
+import logger from "./infrastructure/logger";
 
 export class CustomApplication {
 	private app: Express;

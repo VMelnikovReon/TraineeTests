@@ -1,4 +1,4 @@
-module.exports = {
+const CONFIG = {
 	// данные для api amocrm
 	CLIENT_ID: "73085785-051c-401a-9fe7-908c264035c7",
 	CLIENT_SECRET:
@@ -11,3 +11,5 @@ module.exports = {
 	// конфигурация сервера
 	PORT: 8000,
 };
+
+export default CONFIG;

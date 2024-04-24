@@ -3,18 +3,18 @@ import { Router } from "express";
 import { ROUTES } from "../infrastructure/consts";
 import { Request, Response } from "express";
 import { HttpStatusCode } from "axios";
-import { UpdateDealsRes } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/UpdateDealsRes";
+import hooksService from "../services/hookService/hooksService";
+import { UpdateDealReq } from "../infrastructure/types/AmoApi/WebHooks/UpdateDealReq";
 
-const logger = require("../infrastructure/logger");
+
 const router = Router();
-const hooksService = require("../services/hookService/hooksService");
 
 router.post(
 	ROUTES.HOOKS.UPDATE_DEAL_ROUTE,
-	async (req: Request<{}, {}, UpdateDealsRes>, res: Response) => {
+	async (req: Request<{}, {}, UpdateDealReq>, res: Response) => {
 		hooksService.updateDeal(req.body);
 		res.status(HttpStatusCode.Ok);
 	}
 );
 
-module.exports = router;
+export default router;

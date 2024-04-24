@@ -159,7 +159,7 @@ const getClearPhoneNumber = (tel: string): string | undefined => {
 		: undefined;
 };
 
-module.exports = {
+export default {
 	getFieldValue,
 	getFieldValues,
 	makeField,

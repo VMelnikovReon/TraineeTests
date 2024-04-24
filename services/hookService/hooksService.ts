@@ -7,10 +7,13 @@ import { HookServiceInterface } from "./HookServiceInterface";
 import { UpdateDealReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateDealReq";
 import { Link } from "../../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
 import { UpdateDeal } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
+import Api from "../../api/api";
+import logger from "../../infrastructure/logger";
+
 
 class hooksService implements HookServiceInterface {
-	private api = require("../../api/api");
-	private logger = require('../../infrastructure/logger');
+	private api = Api;
+	private logger = logger;
 
 	private getLeadContacts = (contactLinks: Link[]) : Link | null | undefined =>{
 		switch (contactLinks.length) {
@@ -27,9 +30,10 @@ class hooksService implements HookServiceInterface {
 
 
 	public async updateDeal(deals: UpdateDealReq): Promise<void> {
-		deals.leads.update.forEach(async (lead) => {
+
+		for (const lead of deals.leads.update){
 			const linkEntities: Link[] = await this.api.getLinkEntityes(
-				AMO_ENTITYES.LEADS,
+				'leads',
 				lead.id
 			);
 			const contacts = linkEntities.filter(
@@ -50,20 +54,22 @@ class hooksService implements HookServiceInterface {
 
 			const leadServiceList = lead.custom_fields?.find((field)=>Number(field.id || field.field_id) === CUSTOM_FIELDS_ID.LEAD.SERVICES.ID);
 
-			const priceReduce = leadServiceList?.values.reduce((summ, field) => {
+			const totalPrice = leadServiceList?.values.reduce((summ: number, field) : number => {
 				
 				const serviceName = typeof field === 'object' && field.value
 				const servicePriceField = customFields?.find((field) => (field.name || field.field_name) === serviceName);
 				if (servicePriceField && typeof servicePriceField.values[0] === 'object') {
 					const servicePrice = Number(servicePriceField.values[0].value);
-					summ.price += servicePrice;
+					summ += servicePrice;
 					return summ;
-				} else {
-					return summ;
-				}
-			}, {price : 0});
+				} 
+				return summ;
+			}, 0);
 
-			const totalPrice = priceReduce?.price ? priceReduce.price : 0;
+			if (Number(lead.price) === totalPrice){
+				this.logger.debug('Сумма не изменилась');
+				return;
+			}
 
 			const updateDealDTO: UpdateDeal[] = [
 				{
@@ -72,12 +78,10 @@ class hooksService implements HookServiceInterface {
 				},
 			];
 
-			if (Number(lead.price) !== updateDealDTO[0].price) {
-				await this.api.updateDeals(updateDealDTO);
-			}
-		});
-		this.logger.debug('Сумма сделки изменена');
+			await this.api.updateDeals(updateDealDTO);
+			this.logger.debug('Сумма сделки изменена');
+		}
 	}
 }
 
-module.exports = new hooksService();
+export default new hooksService();
