@@ -17,6 +17,7 @@ import { UpdateTaskReq } from "../../infrastructure/types/AmoApi/WebHooks/Update
 import { CreateNoteDTO } from "../../infrastructure/types/AmoApi/AmoApiReq/Create/CreateNotes/CreateNoteDTO";
 import { UpdateDealReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateDeal/UpdateDealReq";
 import { ActionClose } from "../../infrastructure/types/AmoApi/WebHooks/UpdateTask/UpdateTaskDTO";
+import { TargetEntity } from "../../infrastructure/types/AxiosDTOs/Links/targetEntity";
 
 
 class hooksService implements HookServiceInterface {
@@ -40,7 +41,7 @@ class hooksService implements HookServiceInterface {
 
 		for (const lead of deals.leads.update){
 			const linkEntities: Link[] = await this.api.getLinkEntityes(
-				'leads',
+				TargetEntity.leads,
 				lead.id
 			);
 			const contacts = linkEntities.filter(
@@ -125,23 +126,22 @@ class hooksService implements HookServiceInterface {
 
 		const correctTasks = taskList.filter((task) => (Number(task.action_close) === ActionClose.Yes && Number(task.task_type) === TASKS.TASK_TYPES.CHECK && task.text === TASKS.TASK_VALUES.CHECK_PRICE && Number(task.element_type) === AMO_ENTITYES.TYPES_ID.LEADS));
 
-		if (!correctTasks) {
+		if (correctTasks.length === 0) {
 			return;
 		}
 
 
-		for(const task of correctTasks){
-			const createNoteDTO: CreateNoteDTO[] = [{
-				note_type : NOTES.NOTE_TYPES.COMMON,
-				params:{
-					text: NOTES.NOTE_VALUES.PRIVE_CHECKED,
-				}
-			}]
-	
-			await this.api.createNote(createNoteDTO, AMO_ENTITYES.LEADS, task.element_id);
+		const task = correctTasks[0];
+		const createNoteDTO: CreateNoteDTO[] = [{
+			note_type : NOTES.NOTE_TYPES.COMMON,
+			params:{
+				text: NOTES.NOTE_VALUES.PRIVE_CHECKED,
+			}
+		}]
 
-			this.logger.debug('Примечание созданно');
-		}
+		await this.api.createNote(createNoteDTO, AMO_ENTITYES.LEADS, task.element_id);
+
+		this.logger.debug('Примечание созданно');
 	}
 }
 

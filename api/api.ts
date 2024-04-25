@@ -3,7 +3,7 @@
  * Модуль используется для работы в NodeJS.
  */
 
-import { AxiosError, AxiosRequestConfig, HttpStatusCode } from "axios";
+import axios, { AxiosError, AxiosRequestConfig, HttpStatusCode } from "axios";
 import { TokenResponse } from "../infrastructure/types/AmoApi/AmoApiRes/Account/TokenResponse";
 import { Deal } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/Deal";
 import { Contact } from "../infrastructure/types/AmoApi/AmoApiRes/Contact/Contact";
@@ -12,7 +12,6 @@ import { DealsResponse } from "../infrastructure/types/AmoApi/AmoApiRes/Deals/De
 import { UpdateDeal } from "../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
 import { Filters } from "../infrastructure/types/AmoApi/Filters";
 import { UpdateContact } from "../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateContact";
-import axios from "axios";
 import { ERRORS } from "../infrastructure/consts";
 import { EntityLinksDTO, Link } from "../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
 import querystring from 'querystring';
@@ -25,13 +24,12 @@ import { GetTaskResponse } from "../infrastructure/types/AmoApi/AmoApiRes/Task/G
 import { Task } from "../infrastructure/types/AmoApi/AmoApiRes/Task/Task";
 import { CreateTaskDTO } from "../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTask";
 import { CreateNoteDTO } from "../infrastructure/types/AmoApi/AmoApiReq/Create/CreateNotes/CreateNoteDTO";
+import { TargetEntity } from "../infrastructure/types/AxiosDTOs/Links/targetEntity";
 
 
 axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 
 const AMO_TOKEN_PATH = "amo_token.json";
-
-const LIMIT = 200;
 
 export class Api {
 	private access_token: string | null = null;
@@ -223,13 +221,15 @@ export class Api {
 
 	public getLinkEntityes = this.authChecker(
 		(
-			targetEntity: 'leads' | "contacts" | "companies" | "customers",
+			targetEntity: TargetEntity,
 			id: number,
 			filters: Filters = {}
 		): Promise<Link[]> => {
 			return axios
 				.get<EntityLinksDTO>(
-					`${this.ROOT_PATH}/api/v4/${targetEntity}/${id}/links`,
+					`${this.ROOT_PATH}/api/v4/${targetEntity}/${id}/links?${querystring.stringify({
+						...filters,
+					})}`,
 					{
 						headers: {
 							Authorization: `Bearer ${this.access_token}`,
