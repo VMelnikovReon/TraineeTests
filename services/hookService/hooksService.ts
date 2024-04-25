@@ -1,25 +1,30 @@
 import {
 	AMO_ENTITYES,
 	CUSTOM_FIELDS_ID,
-	TASK_TYPES,
+	NOTES,
+	TASKS,
 } from "../../infrastructure/consts";
 import { Contact } from "../../infrastructure/types/AmoApi/AmoApiRes/Contact/Contact";
 import { HookServiceInterface } from "./HookServiceInterface";
-import { UpdateDealReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateDealReq";
 import { Link } from "../../infrastructure/types/AmoApi/AmoApiReq/EntityLinks";
 import { UpdateDeal } from "../../infrastructure/types/AmoApi/AmoApiReq/Update/UpdateDeal";
 import Api from "../../api/api";
 import logger from "../../infrastructure/logger";
 import { TaskQueryParams } from "../../infrastructure/types/AmoApi/AmoApiReq/QueryParams/TasksQueryParams";
-import { CreateTaskDTO } from "../../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTaskDTO";
 import { getDateInUtc } from "../../infrastructure/helpers/getDateInUTC";
+import { CreateTaskDTO } from "../../infrastructure/types/AmoApi/AmoApiReq/Create/CreateTask";
+import { UpdateTaskReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateTask/UpdateTaskReq";
+import { CreateNoteDTO } from "../../infrastructure/types/AmoApi/AmoApiReq/Create/CreateNotes/CreateNoteDTO";
+import { UpdateDealReq } from "../../infrastructure/types/AmoApi/WebHooks/UpdateDeal/UpdateDealReq";
+import { ActionClose } from "../../infrastructure/types/AmoApi/WebHooks/UpdateTask/UpdateTaskDTO";
+import { TargetEntity } from "../../infrastructure/types/AxiosDTOs/Links/targetEntity";
 
 
 class hooksService implements HookServiceInterface {
 	private api = Api;
 	private logger = logger;
 
-	private getLeadContacts = (contactLinks: Link[]) : Link | null | undefined =>{
+	private getLeadContacts = (contactLinks: Link[]): Link | null | undefined => {
 		switch (contactLinks.length) {
 			case 0:
 				return null;
@@ -32,12 +37,11 @@ class hooksService implements HookServiceInterface {
 		}
 	}
 
-
 	public async updateDeal(deals: UpdateDealReq): Promise<void> {
 
 		for (const lead of deals.leads.update){
 			const linkEntities: Link[] = await this.api.getLinkEntityes(
-				'leads',
+				TargetEntity.leads,
 				lead.id
 			);
 			const contacts = linkEntities.filter(
@@ -46,7 +50,7 @@ class hooksService implements HookServiceInterface {
 
 			const mainContact = this.getLeadContacts(contacts);
 
-			if (!mainContact){
+			if (!mainContact) {
 				return;
 			}
 
@@ -56,7 +60,7 @@ class hooksService implements HookServiceInterface {
 
 			const customFields = contactFullInfo.custom_fields_values;
 
-			const leadServiceList = lead.custom_fields?.find((field)=>Number(field.id || field.field_id) === CUSTOM_FIELDS_ID.LEAD.SERVICES.ID);
+			const leadServiceList = lead.custom_fields?.find((field) => Number(field.id || field.field_id) === CUSTOM_FIELDS_ID.LEAD.SERVICES.ID);
 
 			const totalPrice = leadServiceList?.values.reduce((summ: number, field) : number => {
 				
@@ -91,7 +95,7 @@ class hooksService implements HookServiceInterface {
 				'filter[entity_id]': lead.id,
 				'filter[entity_type]' : AMO_ENTITYES.LEADS,
 				'filter[is_completed]' : 0,
-				'filter[task_type]' : TASK_TYPES.CHECK,
+				'filter[task_type]' : TASKS.TASK_TYPES.CHECK,
 			}
 			
 			const unComplitedTasks = await this.api.getTasks(taskFilter);
@@ -105,7 +109,7 @@ class hooksService implements HookServiceInterface {
 				{
 					entity_id : Number(lead.id),
 					entity_type: AMO_ENTITYES.LEADS,
-					task_type_id: TASK_TYPES.CHECK,
+					task_type_id: TASKS.TASK_TYPES.CHECK,
 					text: 'Проверить бюджет',
 					responsible_user_id: Number(lead.responsible_user_id),
 					complete_till : getDateInUtc('in one day')
@@ -115,6 +119,29 @@ class hooksService implements HookServiceInterface {
 			await this.api.createTask(createTaskDTO);
 			this.logger.debug('Таска создана');
 		}
+	}
+
+	public async updateTask(tasks: UpdateTaskReq): Promise<void> {
+		const taskList = tasks.task.update;
+
+		const correctTasks = taskList.filter((task) => (Number(task.action_close) === ActionClose.Yes && Number(task.task_type) === TASKS.TASK_TYPES.CHECK && task.text === TASKS.TASK_VALUES.CHECK_PRICE && Number(task.element_type) === AMO_ENTITYES.TYPES_ID.LEADS));
+
+		if (correctTasks.length === 0) {
+			return;
+		}
+
+
+		const task = correctTasks[0];
+		const createNoteDTO: CreateNoteDTO[] = [{
+			note_type : NOTES.NOTE_TYPES.COMMON,
+			params:{
+				text: NOTES.NOTE_VALUES.PRIVE_CHECKED,
+			}
+		}]
+
+		await this.api.createNote(createNoteDTO, AMO_ENTITYES.LEADS, task.element_id);
+
+		this.logger.debug('Примечание созданно');
 	}
 }
 

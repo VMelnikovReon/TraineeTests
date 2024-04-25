@@ -20,14 +20,38 @@ export const CUSTOM_FIELDS_ID = {
 	
 };
 
-export const TASK_TYPES = {
-	CHECK: 3354374
+export const NOTES = {
+	NOTE_TYPES:{
+		COMMON:'common',
+		CALL_IN:'call_in',
+		CALL_OUT:'call_out',
+		SERVICE_MESSAGE:'service_message',
+		EXTENDED_SERVICE_MESSAGE:'extended_service_message',
+		MESSAGE_CACHIER:'message_cashier',
+		GEOLOCATION:'geolocation',
+		SMS_IN:'sms_in',
+		SMS_OUT:'sms_out',
+		ATTACHMENT:'attachment',
+	},
+	NOTE_VALUES: {
+		PRIVE_CHECKED: 'Бюджет проверен, ошибок нет',
+	}
+}
+
+export const TASKS = {
+	TASK_TYPES :{
+		CHECK: 3354374
+	},
+	TASK_VALUES:{
+		CHECK_PRICE: 'Проверить бюджет'
+	}
 }
 
 export const ROUTES = {
 	HOOKS: {
 		HOME_ROUTE: '/hooks',
-		UPDATE_DEAL_ROUTE : '/updatedeal'
+		UPDATE_DEAL_ROUTE : '/updatedeal',
+		UPDATE_TASK_ROUTE : '/updatetask'
 	},
 	PING_ROUTE: '/ping'
 }
@@ -39,6 +63,9 @@ export const ERRORS = {
 export const AMO_ENTITYES = {
 	CONTACTS: 'contacts',
 	LEADS : 'leads',
+	TYPES_ID :{
+		LEADS : 2,
+	}
 }
 
 export const TIMESTAMP = {
