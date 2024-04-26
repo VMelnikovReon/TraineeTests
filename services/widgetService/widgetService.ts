@@ -6,6 +6,7 @@ import TokenRepository from "../../repositories/TokenRepository/TokenRepository"
 import { Token, UpdateTokenDTO } from "../../models/TokenSchema";
 import api from "../../api/api";
 import { AxiosError } from "axios";
+import { WidgetDeleteReq } from "../../infrastructure/types/AmoApi/AmoApiReq/Widget/WidgetDeleteReq";
 
 class hooksService implements WidgetServiceInterface {
 	private readonly api = api;
@@ -16,33 +17,9 @@ class hooksService implements WidgetServiceInterface {
 		this.tokenRepository = tokenRepository;
 	}
 
-	private async refreshToken(
-		clientId: string,
-		refreshToken: string
-	): Promise<void> {
-		const tokens = await this.api.refreshToken(clientId, refreshToken);
-
-		if (tokens instanceof AxiosError) {
-			throw new Error("не возможно обновить токен");
-		}
-
-		await this.tokenRepository.updateToken(clientId, {
-			access_token: tokens.access_token,
-			refresh_token: tokens.refresh_token,
-		});
-
-		logger.debug("токены обновлены");
-	}
 
 	public async installWidget(installInfo: WidgetInstallReq): Promise<void> {
-		const bdToken = await this.tokenRepository.checkToken(
-			installInfo.client_id
-		);
-
-		if (bdToken) {
-			await this.refreshToken(installInfo.client_id, bdToken);
-		}
-
+		
 		const token = await api.requestAccessToken(
 			installInfo.client_id,
 			installInfo.code
@@ -50,6 +27,14 @@ class hooksService implements WidgetServiceInterface {
 
 		if (token instanceof AxiosError) {
 			throw new Error("ошибка при получении токена");
+		}
+
+		if (await this.tokenRepository.checkToken(installInfo.client_id)) {
+			await this.tokenRepository.updateToken(installInfo.client_id, {
+				access_token : token.access_token,
+				refresh_token : token.refresh_token
+			});
+			return;
 		}
 
 		const tokenEntity: Token = {
@@ -62,13 +47,13 @@ class hooksService implements WidgetServiceInterface {
 
 		await this.tokenRepository.createTokenEntity(tokenEntity);
 	}
-	public async deleteWidget(deleteInfo: WidgetInstallReq): Promise<void> {
+	public async deleteWidget(deleteInfo: WidgetDeleteReq): Promise<void> {
 		const newTokenData: UpdateTokenDTO = {
 			access_token: "NULL",
 			refresh_token: "NULL",
 			installed: false,
 		};
-		await this.tokenRepository.deleteToken(deleteInfo.client_id, newTokenData);
+		await this.tokenRepository.deleteToken(deleteInfo.client_uuid, newTokenData);
 	}
 }
 

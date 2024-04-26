@@ -9,11 +9,12 @@ class TokenRepository implements TokenRepositoryInterface {
 
 	public async updateToken(clientId:string, newData: UpdateTokenDTO) : Promise<void>{
 		await TokenModel.updateOne({ user_id: clientId}, newData);
+		logger.debug('токен обновлен');
 	}
 
-	public async checkToken(clientId:string) : Promise<string | null>{
+	public async checkToken(clientId:string) : Promise<boolean>{
 		const token = await TokenModel.findOne({user_id: clientId});
-		return token ? token.refresh_token : null;
+		return token ? true : false;
 	}
 
 	public async createTokenEntity(token: Token) : Promise<void> {
