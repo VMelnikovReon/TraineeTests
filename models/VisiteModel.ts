@@ -1,22 +1,27 @@
-import { Schema, model } from "mongoose";
+import mongoose, {Schema, model, ObjectId} from "mongoose";
+
+export enum visiteStatus{
+    planned = 'planned',
+    visited = 'visited',
+    cancelled = 'cancelled'
+}
 
 export interface Visite{
 	_id: string,
-    client: string,
-    plannedDateTime: { type: Date, required: true },
-    actualDateTime: { type: Date },
-    status: { type: String, enum: ['planned', 'visited', 'cancelled'], required: true },
-    services: [{ type: String, ref: 'Service' }],
-    totalCost: { type: Number }
+    client: ObjectId,
+    plannedDateTime: Date,
+    actualDateTime: Date,
+    status: visiteStatus,
+    services: string[],
+    totalCost: number
 }
 
 export const VisiteScheme = new Schema<Visite>({
-	_id: { type: String, required: true },
-    client: { type: String, ref: 'Client', required: true },
+    client: { type: mongoose.Types.ObjectId, ref: 'Client', required: true },
     plannedDateTime: { type: Date, required: true },
     actualDateTime: { type: Date },
     status: { type: String, enum: ['planned', 'visited', 'cancelled'], required: true },
-    services: [{ type: String, ref: 'Service' }],
+    services: [{ type: mongoose.Types.ObjectId, ref: 'Service' }],
     totalCost: { type: Number }
 })
 
