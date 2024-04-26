@@ -3,6 +3,7 @@ import { errorHandlerMiddleware } from "./infrastructure/errors/errorHandlerMidd
 import express from 'express';
 import config from "./config";
 import logger from "./infrastructure/logger";
+import { router } from "./routers/mainRouter";
 
 export class CustomApplication {
 	private app: Express;
@@ -12,7 +13,7 @@ export class CustomApplication {
 	}
 
 	public addRouters(path: string): CustomApplication {
-		
+		this.app.use(path, router)
 		return this;
 	}
 

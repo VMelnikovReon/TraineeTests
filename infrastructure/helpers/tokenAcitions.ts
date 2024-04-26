@@ -1,7 +1,8 @@
+import logger from "../logger";
 import { WidgetInstallReq } from "../types/AmoApi/AmoApiReq/Widget/WidgetInstallReq";
+import fs from 'fs';
 
 const TOKEN_PATH = 'api/tokens/';
-const fs = require('fs');
 
 type tokenData = {
     userId:string,
@@ -15,9 +16,15 @@ export const saveToken = (userInfo: tokenData) : void=>{
     }
 
     fs.writeFileSync(`${TOKEN_PATH}${userInfo.userId}.json`,JSON.stringify(userInfo));
+    logger.debug('токен сохранен')
 }
 
-export const getToken = (user:string) : WidgetInstallReq=>{
-    const token = fs.readFileSync(`${TOKEN_PATH}${user}.json`);
-    return token;
+export const deleteToken = (userId:string) : void=>{
+    fs.unlink(`${TOKEN_PATH}${userId}.json`, (err) => {
+        if (err) {
+          logger.debug('ошибка при удалении токена')
+          return;
+        }
+        logger.debug('токен удален')
+    })
 }

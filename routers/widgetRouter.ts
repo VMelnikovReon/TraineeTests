@@ -8,6 +8,7 @@ import { WidgetInstallReq } from "../infrastructure/types/AmoApi/AmoApiReq/Widge
 import { saveToken } from "../infrastructure/helpers/tokenAcitions";
 import logger from "../infrastructure/logger";
 import widgetService from "../services/widgetService/widgetService";
+import { WidgetDeleteReq } from "../infrastructure/types/AmoApi/AmoApiReq/Widget/WidgetDeleteReq";
 
 const router = Router();
 
@@ -21,7 +22,7 @@ router.get(
 
 router.get(
 	ROUTES.WIDGET.DELETE,
-	async (req: Request<{}, {}, {}, {}>, res: Response) => {
+	async (req: Request<{}, {}, {}, WidgetDeleteReq>, res: Response) => {
 		widgetService.deleteWidget(req.query);
 		res.status(200).send();
 	}

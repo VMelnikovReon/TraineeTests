@@ -11,10 +11,6 @@ import logger from "../infrastructure/logger";
 
 axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay });
 
-const AMO_TOKEN_PATH = "./tokens/";
-
-const LIMIT = 200;
-
 export class Api {
 	private readonly ROOT_PATH = `https://${config.SUB_DOMAIN}.amocrm.ru`;
 
