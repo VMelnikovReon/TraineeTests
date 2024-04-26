@@ -11,7 +11,7 @@ class TokenRepository implements TokenRepositoryInterface {
 
 	public async checkToken(clientId:string) : Promise<boolean>{
 		const token = await TokenModel.findOne({user_id: clientId});
-		return token ? true : false;
+		return Boolean(token);
 	}
 
 	public async createTokenEntity(token: Token) : Promise<void> {
