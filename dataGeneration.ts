@@ -7,11 +7,12 @@ import {
 import { ClientModel } from "./models/ClientModel";
 import { ServiceModel } from "./models/ServiceModel";
 import logger from "./infrastructure/logger";
+import { config } from "./config";
 
 async function fillDatabase() {
 	try {
 		mongoose
-			.connect("mongodb://127.0.0.1:27017/LastTask")
+			.connect(config.CONNECTION_STRING)
 			.then(() => logger.debug("соединение установленно"));
 
 		await generateClients(200);
