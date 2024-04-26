@@ -1,9 +1,6 @@
-import { WidgetInstallReq } from "../../infrastructure/types/AmoApi/AmoApiReq/Widget/WidgetInstallReq";
 import { TokenRepositoryInterface } from "./TokenRepositoryInterface";
 import logger from "../../infrastructure/logger";
 import { Token, TokenModel, TokenSchema, UpdateTokenDTO } from "../../models/TokenSchema";
-import { ServiceError } from "../../infrastructure/errors/ServiceError";
-import { debug } from "console";
 
 class TokenRepository implements TokenRepositoryInterface {
 
@@ -23,11 +20,6 @@ class TokenRepository implements TokenRepositoryInterface {
 		logger.debug("токен сохранен в бд");
 	}
 	public async deleteToken(userId: string, newData: UpdateTokenDTO): Promise<void> {
-		const tokenEntity = await TokenModel.findOne({user_id:userId});
-
-		if (!tokenEntity){
-			throw ServiceError.NotFound('токен не найден');
-		}
 
 		await this.updateToken(userId, newData);
 

@@ -1,16 +1,17 @@
 import { WidgetInstallReq } from "../../infrastructure/types/AmoApi/AmoApiReq/Widget/WidgetInstallReq";
 import { TokenRepositoryInterface } from "../../repositories/TokenRepository/TokenRepositoryInterface";
 import { WidgetServiceInterface } from "./WidgetServiceInterface";
-import logger from "../../infrastructure/logger";
 import TokenRepository from "../../repositories/TokenRepository/TokenRepository";
 import { Token, UpdateTokenDTO } from "../../models/TokenSchema";
 import api from "../../api/api";
+import jwt from 'jsonwebtoken'
 import { AxiosError } from "axios";
 import { WidgetDeleteReq } from "../../infrastructure/types/AmoApi/AmoApiReq/Widget/WidgetDeleteReq";
+import { TokenPayload } from "../../infrastructure/types/AmoApi/TokenPayload";
+import { ServiceError } from "../../infrastructure/errors/ServiceError";
 
 class hooksService implements WidgetServiceInterface {
 	private readonly api = api;
-	private readonly logger = logger;
 	private readonly tokenRepository;
 
 	constructor(tokenRepository: TokenRepositoryInterface) {
@@ -20,7 +21,7 @@ class hooksService implements WidgetServiceInterface {
 
 	public async installWidget(installInfo: WidgetInstallReq): Promise<void> {
 		
-		const token = await api.requestAccessToken(
+		const token = await this.api.requestAccessToken(
 			installInfo.client_id,
 			installInfo.code
 		);
@@ -29,8 +30,14 @@ class hooksService implements WidgetServiceInterface {
 			throw new Error("ошибка при получении токена");
 		}
 
-		if (await this.tokenRepository.checkToken(installInfo.client_id)) {
-			await this.tokenRepository.updateToken(installInfo.client_id, {
+		const tokenPayload: TokenPayload | null = jwt.decode(token.access_token) as TokenPayload | null;
+
+		if (!tokenPayload){
+			throw new Error('не удалось декодировать токен');
+		}
+
+		if (await this.tokenRepository.checkToken(tokenPayload.account_id)) {
+			await this.tokenRepository.updateToken(tokenPayload.account_id, {
 				access_token : token.access_token,
 				refresh_token : token.refresh_token
 			});
@@ -38,7 +45,7 @@ class hooksService implements WidgetServiceInterface {
 		}
 
 		const tokenEntity: Token = {
-			user_id: installInfo.client_id,
+			user_id: tokenPayload.account_id,
 			subdomain: installInfo.referer,
 			access_token: token.access_token,
 			refresh_token: token.refresh_token,
@@ -48,12 +55,17 @@ class hooksService implements WidgetServiceInterface {
 		await this.tokenRepository.createTokenEntity(tokenEntity);
 	}
 	public async deleteWidget(deleteInfo: WidgetDeleteReq): Promise<void> {
+
+		if (await !this.tokenRepository.checkToken(deleteInfo.account_id)){
+			throw ServiceError.NotFound('токен не найден');
+		}
+
 		const newTokenData: UpdateTokenDTO = {
 			access_token: "NULL",
 			refresh_token: "NULL",
 			installed: false,
 		};
-		await this.tokenRepository.deleteToken(deleteInfo.client_uuid, newTokenData);
+		await this.tokenRepository.deleteToken(deleteInfo.account_id, newTokenData);
 	}
 }
 
