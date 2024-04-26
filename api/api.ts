@@ -247,12 +247,12 @@ export class Api {
 			.post(`${this.ROOT_PATH}/api/v4/tasks`, body, this.createReqConfig({Auth:true}));
 	})
 
-	public getTasks = this.authChecker((quetyParams: TaskQueryParams) : Promise<Task[]>=>{
+	public getTasks = this.authChecker((quetyParams: TaskQueryParams) : Promise<GetTaskResponse>=>{
 		return axios
 			.get<GetTaskResponse>(`${this.ROOT_PATH}/api/v4/tasks?${querystring.stringify({
 				...quetyParams,
 			})}`, this.createReqConfig({Auth:true}))
-			.then((res)=>res.data._embedded.tasks);
+			.then((res)=>res.data);
 	})
 
 	public createNote = this.authChecker((body:CreateNoteDTO[], entityType:string, entityId?:number) : Promise<void>=>{
