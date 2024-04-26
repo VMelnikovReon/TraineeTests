@@ -74,7 +74,11 @@ class hooksService implements HookServiceInterface {
 				return summ;
 			}, 0);
 
-			if (Number(lead.price) === totalPrice){
+			const finalPrice = totalPrice ? totalPrice : 0;
+
+			console.log(finalPrice);
+
+			if (Number(lead.price) === finalPrice){
 				this.logger.debug('Сумма не изменилась');
 				return;
 			}
@@ -82,7 +86,7 @@ class hooksService implements HookServiceInterface {
 			const updateDealDTO: UpdateDeal[] = [
 				{
 					id: Number(lead.id),
-					price: totalPrice,
+					price: finalPrice,
 				},
 			];
 
