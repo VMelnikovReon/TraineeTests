@@ -4,11 +4,13 @@ import { WidgetInstallReq } from "../../infrastructure/types/AmoApi/AmoApiReq/Wi
 import { WidgetServiceInterface } from "./WidgetServiceInterface";
 import { TokenPayload } from "../../infrastructure/types/AmoApi/TokenPayload";
 import jwt from 'jsonwebtoken';
+import api from "../../api/api";
+import logger from "../../infrastructure/logger";
 
 class hooksService implements WidgetServiceInterface {
 	
-	private readonly api = require('../../api/api');
-	private readonly logger = require('../../infrastructure/logger');
+	private readonly api = api;
+	private readonly logger = logger;
 
 	public async installWidget(installInfo: WidgetInstallReq): Promise<void>{
 		const token = await this.api.requestAccessToken(
@@ -26,7 +28,7 @@ class hooksService implements WidgetServiceInterface {
 			throw new Error('не удалось декодировать токен');
 		}
 		
-		saveToken(installInfo);
+		saveToken({userId: tokenPayload.account_id, acces_token: token.access_token, refresh_token: token.refresh_token});
 		this.logger.debug(`токен ${installInfo.client_id} сохранен`);
 	}
 }
