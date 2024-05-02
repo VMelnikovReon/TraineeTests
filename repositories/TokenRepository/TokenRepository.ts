@@ -4,13 +4,13 @@ import { Token, TokenModel, TokenSchema, UpdateTokenDTO } from "../../models/Tok
 
 class TokenRepository implements TokenRepositoryInterface {
 
-	public async updateToken(clientId:string, newData: UpdateTokenDTO) : Promise<void>{
-		await TokenModel.updateOne({ user_id: clientId}, newData);
+	public async updateToken(accountId:string, newData: UpdateTokenDTO) : Promise<void>{
+		await TokenModel.updateOne({ account_id: accountId}, newData);
 		logger.debug('токен обновлен');
 	}
 
-	public async checkToken(clientId:string) : Promise<boolean>{
-		const token = await TokenModel.findOne({user_id: clientId});
+	public async checkToken(accountId:string) : Promise<boolean>{
+		const token = await TokenModel.findOne({account_id: accountId});
 		return Boolean(token);
 	}
 
@@ -19,9 +19,9 @@ class TokenRepository implements TokenRepositoryInterface {
 
 		logger.debug("токен сохранен в бд");
 	}
-	public async deleteToken(userId: string, newData: UpdateTokenDTO): Promise<void> {
+	public async deleteToken(accountId: string, newData: UpdateTokenDTO): Promise<void> {
 
-		await this.updateToken(userId, newData);
+		await this.updateToken(accountId, newData);
 
 		logger.debug('токен удален');
 	}

@@ -36,7 +36,9 @@ class hooksService implements WidgetServiceInterface {
 			throw new Error('не удалось декодировать токен');
 		}
 
-		if (await this.tokenRepository.checkToken(tokenPayload.account_id)) {
+		const checkToken = await this.tokenRepository.checkToken(tokenPayload.account_id);
+
+		if (checkToken) {
 			await this.tokenRepository.updateToken(tokenPayload.account_id, {
 				access_token : token.access_token,
 				refresh_token : token.refresh_token
@@ -45,7 +47,7 @@ class hooksService implements WidgetServiceInterface {
 		}
 
 		const tokenEntity: Token = {
-			user_id: tokenPayload.account_id,
+			account_id: tokenPayload.account_id,
 			subdomain: installInfo.referer,
 			access_token: token.access_token,
 			refresh_token: token.refresh_token,
@@ -56,13 +58,15 @@ class hooksService implements WidgetServiceInterface {
 	}
 	public async deleteWidget(deleteInfo: WidgetDeleteReq): Promise<void> {
 
-		if (await !this.tokenRepository.checkToken(deleteInfo.account_id)){
+		const checkToken = await this.tokenRepository.checkToken(deleteInfo.account_id)
+
+		if (!checkToken){
 			throw ServiceError.NotFound('токен не найден');
 		}
 
 		const newTokenData: UpdateTokenDTO = {
-			access_token: "NULL",
-			refresh_token: "NULL",
+			access_token: null,
+			refresh_token: null,
 			installed: false,
 		};
 		await this.tokenRepository.deleteToken(deleteInfo.account_id, newTokenData);

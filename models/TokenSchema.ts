@@ -1,23 +1,23 @@
 import mongoose, { Schema, model } from "mongoose";
 
 export interface Token{
-	user_id:string,
+	account_id:string,
 	subdomain: string,
-	access_token:string,
-	refresh_token:string,
+	access_token?:string | null,
+	refresh_token?:string | null,
 	installed:boolean
 }
 
 export type UpdateTokenDTO = {
-	user_id?:string,
+	account_id?:string,
 	subdomain?: string,
-	access_token:string,
-	refresh_token:string,
+	access_token?:string | null,
+	refresh_token?:string | null,
 	installed?:boolean,
 }
 
 export const TokenSchema = new Schema<Token>({
-	user_id: {type: String, require: true, unique: true},
+	account_id: {type: String, require: true, unique: true},
 	subdomain: {type: String, require: true},
 	access_token:{type: String, require: true},
 	refresh_token:{type: String, require: true},
