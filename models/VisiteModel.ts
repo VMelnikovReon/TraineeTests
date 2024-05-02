@@ -20,7 +20,7 @@ export const VisiteScheme = new Schema<Visite>({
     client: { type: mongoose.Types.ObjectId, ref: 'Client', required: true },
     plannedDateTime: { type: Date, required: true },
     actualDateTime: { type: Date },
-    status: { type: String, enum: ['planned', 'visited', 'cancelled'], required: true },
+    status: { type: String, enum: visiteStatus, required: true },
     services: [{ type: mongoose.Types.ObjectId, ref: 'Service' }],
     totalCost: { type: Number }
 })

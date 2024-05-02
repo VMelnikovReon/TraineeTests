@@ -7,28 +7,33 @@ import {
 import { ClientModel } from "./models/ClientModel";
 import { ServiceModel } from "./models/ServiceModel";
 import logger from "./infrastructure/logger";
+import 'dotenv/config';
+import { FILL } from "./infrastructure/consts";
 
 async function fillDatabase() {
 	try {
+		if (!process.env.CONNECTION_STRING){
+			throw new Error('нет строки подключения')
+		}
 		mongoose
-			.connect("mongodb://127.0.0.1:27017/LastTask")
+			.connect(process.env.CONNECTION_STRING)
 			.then(() => logger.debug("соединение установленно"));
 
-		await generateClients(200);
+		await generateClients(FILL.CLIENTS);
 		logger.debug("клиенты");
 
-		await generateServices(10);
+		await generateServices(FILL.SERVICES);
 		logger.debug("услуги");
 
 		const clients = await ClientModel.find();
 		const services = await ServiceModel.find();
 
-		await generateVisits(3000, clients, services);
+		await generateVisits(FILL.VISITS, clients, services);
 		logger.debug("визиты");
 
 		logger.debug("база заполнена успешно");
 	} catch (error) {
-		logger.debug("ошибочки");
+		logger.debug(error);
 	} finally {
 		mongoose.disconnect();
 	}

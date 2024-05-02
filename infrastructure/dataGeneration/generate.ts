@@ -4,7 +4,7 @@ import { Service, ServiceModel } from '../../models/ServiceModel';
 import { VisiteModel } from '../../models/VisiteModel';
 import { ObjectId } from 'mongoose';
 
-export async function generateClients(count: number) {
+export async function generateClients(count: number) : Promise<void> {
     const clients = [];
     for (let i = 0; i < count; i++) {
         const client = new ClientModel({
@@ -19,7 +19,7 @@ export async function generateClients(count: number) {
     await ClientModel.insertMany(clients);
 }
 
-export async function generateServices(count: number) {
+export async function generateServices(count: number): Promise<void> {
     const services = [];
     for (let i = 0; i < count; i++) {
         const service = new ServiceModel({
@@ -33,7 +33,7 @@ export async function generateServices(count: number) {
     await ServiceModel.insertMany(services);
 }
 
-export async function generateVisits(count: number, clients : Client[], services: Service[]) {
+export async function generateVisits(count: number, clients : Client[], services: Service[]): Promise<void> {
     const visits = [];
     const statuses = ['planned', 'visited', 'cancelled'];
 
