@@ -3,15 +3,24 @@ import { Client, ClientModel } from '../../models/ClientModel';
 import { Service, ServiceModel } from '../../models/ServiceModel';
 import { VisiteModel } from '../../models/VisiteModel';
 import { ObjectId } from 'mongoose';
+import { faker } from '@faker-js/faker';
+
+
+function randomDate(startDate: Date, endDate: Date): Date {
+    const startMilliseconds = startDate.getTime();
+    const endMilliseconds = endDate.getTime();
+    const randomMilliseconds = startMilliseconds + Math.random() * (endMilliseconds - startMilliseconds);
+    return new Date(randomMilliseconds);
+  }
 
 export async function generateClients(count: number) : Promise<void> {
     const clients = Array.from({length : count}, (_item, index)=>{
         const client = new ClientModel({
-            fname: 'Name' + index,
-            lname: 'Lastname' + index,
-            patronymic: 'Patronymic' + index,
-            birthDate: new Date(index),
-            phone: '123456789' + index
+            fname: faker.name.firstName(),
+            lname: faker.name.lastName(),
+            patronymic: faker.name.firstName() + 'евич',
+            birthDate: randomDate(new Date('1980-01-01'), new Date('2000-01-01')),
+            phone: faker.phone.number()
         });
         return client;
     })
@@ -21,10 +30,10 @@ export async function generateClients(count: number) : Promise<void> {
 export async function generateServices(count: number): Promise<void> {
     const services = Array.from({length: count}, (_item,index)=>{
         const service = new ServiceModel({
-            name: 'Service' + index,
-            code: 'CODE' + index,
-            price: Math.floor(Math.random() * 100) + 50,
-            description: 'Description of service ' + index
+            name: faker.random.word(),
+            code: faker.string.uuid(),
+            price: faker.number.int({min:100, max:10000}),
+            description: faker.random.words(10)
         });
         return service;
     });
@@ -58,8 +67,8 @@ export async function generateVisits(count: number, clients : Client[], services
 
         const visit = new VisiteModel({
             client: randomClient._id,
-            plannedDateTime: new Date(index),
-            actualDateTime: status === 'visited' ? new Date(index+1) : null,
+            plannedDateTime: randomDate(new Date('2022-01-01'), new Date('2023-01-01')),
+            actualDateTime: status === 'visited' ? randomDate(new Date('2023-02-01'), new Date('2024-01-01')) : null,
             status: status,
             services: status === 'visited' ? visitServices : null,
             totalCost: status === 'visited' ? totalPrice : null
