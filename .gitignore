@@ -15,3 +15,8 @@ amo_token.json
 # Любые другие файлы проекта
 *.zip
 *.svg
+
+# Любые другие файлы проекта
+.idea/
+.vscode/
+.editonconfig

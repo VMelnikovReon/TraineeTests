@@ -1,5 +1,5 @@
 /**
- *  Модуль с настройками loggera 
+ *  Модуль с настройками loggera
  */
 const log4js = require("log4js");
 
@@ -23,10 +23,14 @@ log4js.configure({
 		},
 	},
 	categories: {
-		default: { appenders: ["everything", "out"], level: "debug", enableCallStack: true },
+		default: {
+			appenders: ["everything", "out"],
+			level: "debug",
+			enableCallStack: true,
+		},
 	},
 });
 
 const logger = log4js.getLogger();
 
-module.exports = logger;
+export default logger;
